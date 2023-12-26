@@ -5,7 +5,7 @@ import { Embeddings } from "langchain/embeddings/base";
 import { TagGenerator } from "../../lc/chains/generate_tags.js";
 import { TweetSummarizer } from "../../lc/chains/summarizer.js";
 import { TweetRelevancyEvaluator } from "../../lc/chains/relevancy.js";
-import { isNil } from "lodash";
+import _ from "lodash";
 import { PGFilter } from "../../lc/vectorstores/pg.js";
 import { TweetAggregator } from "../../lc/chains/aggregator.js";
 import { v4 } from "uuid";
@@ -104,7 +104,7 @@ export default abstract class SemarServer {
     }
 
     const relevancyFilter: PGFilter = {};
-    if (!isNil(tweet.tags)) {
+    if (!_.isNil(tweet.tags)) {
       const tsVectTags = tweet.tags.join(" | ");
       relevancyFilter["text"] = {
         $textSearch: {
@@ -115,7 +115,7 @@ export default abstract class SemarServer {
       };
     }
     let embeddings: number[];
-    if (!isNil(tweet.embedding)) {
+    if (!_.isNil(tweet.embedding)) {
       embeddings = tweet.embedding;
     } else {
       embeddings = await this.db.tweetVectorstore.embeddings.embedQuery(
@@ -185,7 +185,7 @@ export default abstract class SemarServer {
 
   async processTweets(tweets: Tweet[]): Promise<void> {
     tweets.map((tweet) => {
-      if (isNil(tweet.id)) {
+      if (_.isNil(tweet.id)) {
         tweet.id = v4();
       }
     });
@@ -209,7 +209,7 @@ export default abstract class SemarServer {
     const processed = (
       await Promise.all(
         tagsEmbeddings.map(async (tagged) => {
-          if (!isNil(tagged)) {
+          if (!_.isNil(tagged)) {
             const [tweets, tags, embeddings] = tagged;
             for (let i = 0; i < tweets.length; i++) {
               tweets[i].embedding = embeddings[i];
@@ -227,7 +227,7 @@ export default abstract class SemarServer {
           }
         }),
       )
-    ).filter((v) => !isNil(v)) as Summary[];
+    ).filter((v) => !_.isNil(v)) as Summary[];
 
     if (processed.length > 0) {
       await this.db.insertSummaries(processed);

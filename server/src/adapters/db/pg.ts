@@ -8,7 +8,7 @@ import { Summary, Tweet } from "../../types/tweet.js";
 import { User } from "../../types/user.js";
 import { Embeddings } from "langchain/embeddings/base";
 import { Document } from "langchain/document";
-import { isNil } from "lodash";
+import _ from "lodash";
 
 interface CoreColumns {
   id: string;
@@ -75,7 +75,7 @@ export class SemarPostgres<
       throw new Error("Invalid pg-promise argument");
     }
 
-    const pgNoneExt = new PGNoneExt({ pgDb: this.pgInstance });
+    const pgNoneExt = new PGNoneExt({ pgDb: this.pgInstance, metric: "" });
 
     const summaryPgvsArgs = {
       postgresConnectionOptions: this.pgInstance,
@@ -179,7 +179,7 @@ export class SemarPostgres<
   }
 
   async insertTweet(tweet: Tweet): Promise<void> {
-    if (isNil(tweet.embedding)) {
+    if (_.isNil(tweet.embedding)) {
       throw new Error("Needs vector embedding");
     }
 
@@ -192,7 +192,7 @@ export class SemarPostgres<
         pageContent: tweet.text,
       });
       const tags: { tags?: string[] } = {};
-      if (!isNil(tweet.tags)) {
+      if (!_.isNil(tweet.tags)) {
         tags.tags = tweet.tags;
       }
 
@@ -212,7 +212,7 @@ export class SemarPostgres<
   }
 
   async insertTweets(tweets: Tweet[]): Promise<void> {
-    if (tweets.some((tweet) => isNil(tweet.embedding))) {
+    if (tweets.some((tweet) => _.isNil(tweet.embedding))) {
       throw new Error("Needs vector embedding");
     }
 
@@ -224,7 +224,7 @@ export class SemarPostgres<
             .toISOString()
             .replace("T", " ")
             .replace(/\.\d+Z$/, "");
-          if (!isNil(tweet.tags)) {
+          if (!_.isNil(tweet.tags)) {
             tags.tags = tweet.tags;
           }
           acc.embeddings.push(tweet.embedding!);

@@ -1,7 +1,7 @@
 import express, { Express } from "express";
 import SemarServer, { SemarServerOpts } from "./base.js";
 import { Tweet } from "../../types/tweet.js";
-import { isNil } from "lodash";
+import _ from "lodash";
 
 interface SemarHttpServerOpts extends SemarServerOpts {
   port: number;
@@ -24,7 +24,7 @@ export class SemarHttpServer extends SemarServer {
         tweets: Tweet[];
         ids: string[];
       };
-      if (!isNil(rawTweets) && !isNil(ids)) {
+      if (!_.isNil(rawTweets) && !_.isNil(ids)) {
         res
           .status(400)
           .send({
@@ -33,9 +33,9 @@ export class SemarHttpServer extends SemarServer {
           });
       }
 
-      if (!isNil(ids)) {
+      if (!_.isNil(ids)) {
         tweets = await Promise.all(ids.map(this.db.fetchTweet));
-      } else if (!isNil(rawTweets)) {
+      } else if (!_.isNil(rawTweets)) {
         tweets = rawTweets;
       } else {
         res

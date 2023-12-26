@@ -1,49 +1,49 @@
 version: "3"
 services:
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-      target: runner
-    volumes:
-      - ./frontend:/app/src
-    ports:
-      - "${FRONTEND_PORT}:${FRONTEND_PORT}"
-    depends_on:
-      - server
-    env_file: 
-      - ./frontend/.env
-    environment:
-      - MAIL_GPT_SERVER_URL=http://server:${SERVER_PORT}
-      - TOKEN_KEY=${TOKEN_KEY}
+  # frontend:
+  #   build:
+  #     context: ./frontend
+  #     dockerfile: Dockerfile
+  #     target: runner
+  #   volumes:
+  #     - ./frontend:/app/src
+  #   ports:
+  #     - "${FRONTEND_PORT}:${FRONTEND_PORT}"
+  #   depends_on:
+  #     - server
+  #   env_file: 
+  #     - ./frontend/.env
+  #   environment:
+  #     - MAIL_GPT_SERVER_URL=http://server:${SERVER_PORT}
+  #     - TOKEN_KEY=${TOKEN_KEY}
 
-  server:
-    build:
-      context: ./server
-      dockerfile: Dockerfile
-    volumes:
-      - ./server:/app/src
-    ports:
-      - "${SERVER_PORT}:${SERVER_PORT}"
-    depends_on:
-      - db
-    env_file: 
-      - ./server/.env
-    environment:
-      - POSTGRES_HOST=db
-      - TOKEN_KEY=${TOKEN_KEY}
-      - ANALYZER_HOST=analyzer
-      - ANALYZER_PORT=${ANALYZER_PORT}
+  # server:
+  #   build:
+  #     context: ./server
+  #     dockerfile: Dockerfile
+  #   volumes:
+  #     - ./server:/app/src
+  #   ports:
+  #     - "${SERVER_PORT}:${SERVER_PORT}"
+  #   depends_on:
+  #     - db
+  #   env_file: 
+  #     - ./server/.env
+  #   environment:
+  #     - POSTGRES_HOST=db
+  #     - TOKEN_KEY=${TOKEN_KEY}
+  #     - ANALYZER_HOST=analyzer
+  #     - ANALYZER_PORT=${ANALYZER_PORT}
 
-  analyzer:
-    build:
-      context: ./analyzer
-      dockerfile: Dockerfile
-    ports:
-      - "${ANALYZER_PORT}:${ANALYZER_PORT}"  # Expose the port the analyzer service listens on
-    environment:
-      - VECTOR_SERVICE_PORT=${ANALYZER_PORT}
-      - TOKEN_KEY=${TOKEN_KEY}
+  # analyzer:
+  #   build:
+  #     context: ./analyzer
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "${ANALYZER_PORT}:${ANALYZER_PORT}"  # Expose the port the analyzer service listens on
+  #   environment:
+  #     - VECTOR_SERVICE_PORT=${ANALYZER_PORT}
+  #     - TOKEN_KEY=${TOKEN_KEY}
 
   db:
     build:

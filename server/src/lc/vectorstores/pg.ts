@@ -221,7 +221,7 @@ export type PGFilterWithJoin =
       join?: JoinStatement | JoinStatement[];
     };
 
-export type Metric = "cosine" | "l2" | "manhattan" | "inner_product";
+export type Metric = "cosine" | "l2" | "manhattan" | "inner_product" | "";
 
 interface CoreColumns {
   id: string;
@@ -401,7 +401,7 @@ export class PGNoneExt<
   Columns extends Record<string, unknown> = Record<string, unknown>,
 > extends PostgresEmbeddingExtension<Columns> {
   allowedMetrics(): Metric[] {
-    return [];
+    return [""];
   }
 
   buildFetchRowsStatement(
