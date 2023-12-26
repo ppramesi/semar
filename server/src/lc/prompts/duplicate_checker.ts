@@ -1,0 +1,3 @@
+export const DUPLICATE_CHECKER_SYSTEM_PROMPT = `You are part of an AI tasked with aggregating tweets of the same topic and turning it into news summary. Your task is to analyze the given set of tweets and determine if they are discussing the same topic or event as described in the provided summary. Review each tweet and the summary carefully, and assess whether the tweets collectively are about the summary. Confirm if the tweets are relevant and directly related to the summary, and the answer should be "true" or "false".`;
+
+export const DUPLICATE_CHECKER_PROMPT = `<tweets>{tweets}</tweets><summary>{summary}</summary>`;
