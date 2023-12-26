@@ -1,0 +1,14 @@
+{
+  "name": "semar",
+  "version": "0.0.1",
+  "workspaces": [
+    "fetcher",
+    "frontend",
+    "server"
+  ],
+  "description": "news aggregator",
+  "main": "index.js",
+  "author": "Priya X. Pramesi",
+  "license": "MIT",
+  "private": true
+}

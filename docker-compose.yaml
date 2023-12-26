@@ -1,0 +1,73 @@
+version: "3"
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: runner
+    volumes:
+      - ./frontend:/app/src
+    ports:
+      - "${FRONTEND_PORT}:${FRONTEND_PORT}"
+    depends_on:
+      - server
+    env_file: 
+      - ./frontend/.env
+    environment:
+      - MAIL_GPT_SERVER_URL=http://server:${SERVER_PORT}
+      - TOKEN_KEY=${TOKEN_KEY}
+
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    volumes:
+      - ./server:/app/src
+    ports:
+      - "${SERVER_PORT}:${SERVER_PORT}"
+    depends_on:
+      - db
+    env_file: 
+      - ./server/.env
+    environment:
+      - POSTGRES_HOST=db
+      - TOKEN_KEY=${TOKEN_KEY}
+      - ANALYZER_HOST=analyzer
+      - ANALYZER_PORT=${ANALYZER_PORT}
+
+  analyzer:
+    build:
+      context: ./analyzer
+      dockerfile: Dockerfile
+    ports:
+      - "${ANALYZER_PORT}:${ANALYZER_PORT}"  # Expose the port the analyzer service listens on
+    environment:
+      - VECTOR_SERVICE_PORT=${ANALYZER_PORT}
+      - TOKEN_KEY=${TOKEN_KEY}
+
+  db:
+    build:
+      context: ./database
+      dockerfile: Dockerfile
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "${POSTGRES_PORT}:${POSTGRES_PORT}"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+
+  pgadmin:
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+      PGADMIN_LISTEN_PORT: ${PGADMIN_PORT}
+    depends_on:
+      - db
+    ports:
+      - "${PGADMIN_PORT}:${PGADMIN_PORT}"
+
+volumes:
+  db-data:
