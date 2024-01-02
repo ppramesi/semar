@@ -48,8 +48,7 @@
     "tweet-harvest": "dist/bin.js"
   },
   "scripts": {
-    "start:scheduledscraper": "node ./dist/index.js",
-    "start": "ts-node src/crawl.ts",
+    "start": "node ./dist/index.js",
     "dev": "npx tsx src/dev.ts",
     "build": "tsc",
     "build:pkg": "pkg . --out-path ./bin",

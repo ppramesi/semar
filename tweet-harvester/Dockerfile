@@ -12,4 +12,4 @@ RUN npm run build
 # RUN npm i --only=production
 # COPY --from=builder /app/dist ./dist
 
-CMD ["npm", "run", "start:autoscraper"]
+CMD ["npm", "run", "start"]
