@@ -2,9 +2,9 @@
   "name": "semar",
   "version": "0.0.1",
   "workspaces": [
-    "fetcher",
     "frontend",
-    "server"
+    "server",
+    "tweet-harvester"
   ],
   "description": "news aggregator",
   "main": "index.js",

@@ -31,6 +31,9 @@ RUN cd /tmp && \
 
 RUN echo 'CREATE EXTENSION IF NOT EXISTS "uuid-ossp";' >> /docker-entrypoint-initdb.d/uuid-ossp.sql
 RUN echo 'CREATE EXTENSION IF NOT EXISTS vector;' >> /docker-entrypoint-initdb.d/vector.sql
+RUN echo 'CREATE TABLE IF NOT EXISTS scrape_accounts (id UUID NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY, account_name TEXT);' >> /docker-entrypoint-initdb.d/init.sql
+RUN echo 'CREATE TABLE IF NOT EXISTS summaries (id UUID NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY, text TEXT, metadata JSONB, embedding vector(1536));' >> /docker-entrypoint-initdb.d/init.sql
+RUN echo 'CREATE TABLE IF NOT EXISTS tweets (id UUID NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY, text TEXT, metadata JSONB, embedding vector(1536), date TIMESTAMP, url TEXT, tags TEXT);' >> /docker-entrypoint-initdb.d/init.sql
 
 # Clean up
 RUN apt-get remove -y --auto-remove \

@@ -12,7 +12,7 @@ import {
 import { BaseChatModel } from "langchain/chat_models/base";
 import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
-import { JsonKeyOutputFunctionsParser } from "langchain/output_parsers";
+import { UnbrittledKeyOutputFunctionParser } from "../parsers/function_output_parser.js";
 
 const keyName = "aggregated_tweets";
 
@@ -30,7 +30,7 @@ const buildPrompt = () =>
       SystemMessagePromptTemplate.fromTemplate(AGGREGATOR_SYSTEM_PROMPT),
       HumanMessagePromptTemplate.fromTemplate(AGGREGATOR_PROMPT),
     ],
-    inputVariables: ["batch_number", "tweets"],
+    inputVariables: ["batch_size", "tweets"],
   });
 
 export type AggregatorOpts = {
@@ -44,12 +44,12 @@ export class TweetAggregator extends TweetChain {
     super({
       llm: opts.llm,
       prompt: buildPrompt(),
-      outputParser: new JsonKeyOutputFunctionsParser({ attrName: keyName }),
+      outputParser: new UnbrittledKeyOutputFunctionParser({ attrName: keyName }),
       llmKwargs: {
         functions: [
           {
             name: functionName,
-            description: `Output formatter. Should always be used to format your response to the user.`,
+            description: `Output formatter. Should always be used to format your response to the user. The output should be formatted correctly such that it can be parsed using Javascript's JSON.parse(). Mind the trailing commas.`,
             parameters: zodToJsonSchema(outputSchema),
           },
         ],

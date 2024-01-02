@@ -1,5 +1,5 @@
 import express, { Express } from "express";
-import SemarServer, { SemarServerOpts } from "./base.js";
+import { SemarServer, SemarServerOpts } from "./base.js";
 import { Tweet } from "../../types/tweet.js";
 import _ from "lodash";
 
@@ -13,24 +13,23 @@ export class SemarHttpServer extends SemarServer {
   constructor(opts: SemarHttpServerOpts) {
     super(opts);
     this.app = express();
-    this.app.use(express.json());
     this.port = opts.port;
   }
 
   buildRoute(): void {
+    this.app.use(express.json());
     this.app.post("/process-tweets", async (req, res) => {
       let tweets: Tweet[];
       const { tweets: rawTweets, ids } = req.body as {
         tweets: Tweet[];
         ids: string[];
       };
+      console.log({ rawTweets })
       if (!_.isNil(rawTweets) && !_.isNil(ids)) {
-        res
-          .status(400)
-          .send({
-            status: "error",
-            error: new Error("either tweet obs or ids"),
-          });
+        res.status(400).send({
+          status: "error",
+          error: new Error("either tweet obs or ids"),
+        });
       }
 
       if (!_.isNil(ids)) {
@@ -49,6 +48,7 @@ export class SemarHttpServer extends SemarServer {
         res.status(200).send({ status: "success" });
         return;
       } catch (error) {
+        console.error(error);
         res.status(400).send({ status: "error", error });
         return;
       }

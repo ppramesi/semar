@@ -31,11 +31,14 @@ const db = new SemarPostgres({
   embeddingDims: 1536,
 });
 
+await db.ensureTablesInDatabase();
+
 const server = new SemarHttpServer({
   db,
   llm: llm35,
   embeddings,
-  port: parseInt(process.env.HTTPS_SERVER_PORT!) ?? 42069,
+  port: parseInt(process.env.SERVER_PORT!) ?? 42069,
 });
 
+server.buildRoute();
 server.startService();

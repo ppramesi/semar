@@ -102,6 +102,7 @@ export class SemarPostgres<
       extraColumns: [
         { name: "date", type: "TIMESTAMP", returned: true },
         { name: "url", type: "TEXT", returned: true },
+        { name: "tags", type: "TEXT", returned: true }
       ],
     };
 
@@ -127,8 +128,20 @@ export class SemarPostgres<
         metric: "cosine",
       },
     });
+  }
 
-    this.tweetVectorstore.ensureTableInDatabase();
+  async ensureTablesInDatabase(): Promise<void> {
+    await this.connect();
+    try {
+      await Promise.all([
+        this.tweetVectorstore.ensureTableInDatabase(),
+        this.summaryVectorstore.ensureTableInDatabase()
+      ]).catch((error) => {
+        console.error(error);  
+      });
+    } catch (error) {
+      console.error(error);
+    }
   }
 
   async connect(): Promise<void> {
@@ -160,16 +173,22 @@ export class SemarPostgres<
 
   static fromSearchResultsToTweets(docs: Document[]) {
     return docs.map((doc) => {
-      return {
+      const tweet = {
         id: doc.metadata.id,
         date: doc.metadata.date,
         url: doc.metadata.url,
-        text: doc.pageContent,
+        text: doc.pageContent
       } as Tweet;
+
+      if (doc.metadata.tags && (doc.metadata.tags as string).length > 0) {
+        tweet.tags = JSON.parse(doc.metadata.tags);
+      }
+
+      return tweet;
     });
   }
 
-  async fetchTweets(filter: PGFilterWithJoin, limit: number): Promise<Tweet[]> {
+  async fetchTweets(limit: number, filter?: PGFilterWithJoin): Promise<Tweet[]> {
     const docs = await this.tweetstore.similaritySearchVectorWithScore(
       [],
       limit,
@@ -219,21 +238,24 @@ export class SemarPostgres<
     try {
       const opts = tweets.reduce(
         (acc, tweet) => {
-          const tags: { tags?: string[] } = {};
           const date = new Date(tweet.date)
             .toISOString()
             .replace("T", " ")
             .replace(/\.\d+Z$/, "");
-          if (!_.isNil(tweet.tags)) {
-            tags.tags = tweet.tags;
-          }
           acc.embeddings.push(tweet.embedding!);
           acc.docs.push(
             new Document({
               pageContent: tweet.text,
             }),
           );
-          acc.opts.extraColumns.push({ url: tweet.url, date, ...tags });
+          const pushParams: { url: string, date: string, tags?: string } = {
+            url: tweet.url, 
+            date
+          }
+          if (!_.isNil(tweet.tags)) {
+            pushParams.tags = JSON.stringify(tweet.tags);
+          }
+          acc.opts.extraColumns.push(pushParams);
           acc.opts.ids.push(tweet.id);
           return acc;
         },
@@ -312,6 +334,24 @@ export class SemarPostgres<
       return tweet;
     } catch (error) {
       throw new Error(`Error fetching tweet: ${error}`);
+    }
+  }
+
+  async fetchSummaries(limit?: number) {
+    try {
+      let summaries: Summary[];
+      if(limit) {
+        summaries = await this.pgInstance.manyOrNone<Summary>(
+          "SELECT * FROM summaries LIMIT $1",
+          [limit]
+        );
+      } else {
+        summaries = await this.pgInstance.manyOrNone<Summary>("SELECT * FROM summaries");
+      }
+
+      return summaries;
+    } catch (error) {
+      throw new Error(`Error fetching summaries: ${error}`);
     }
   }
 

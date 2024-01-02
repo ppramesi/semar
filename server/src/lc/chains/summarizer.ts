@@ -28,7 +28,7 @@ const buildPrompt = () =>
       SystemMessagePromptTemplate.fromTemplate(SUMMARIZER_SYSTEM_PROMPT),
       HumanMessagePromptTemplate.fromTemplate(SUMMARIZER_PROMPT),
     ],
-    inputVariables: ["batch_number", "tweets"],
+    inputVariables: ["batch_size", "tweets", "context_tweets"],
   });
 
 export class TweetSummarizer extends TweetChain {

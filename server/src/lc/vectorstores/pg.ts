@@ -420,7 +420,7 @@ export class PGNoneExt<
     } else {
       selectStatement = returns.length > 0 ? returns.join(", ") : "*";
     }
-    return new Fragment(`SELECT ${selectStatement} FROM $3:name`, [tableName]);
+    return new Fragment(`SELECT ${selectStatement} FROM $1:name`, [tableName]);
   }
 
   buildOrderByLimit(_limit: number): Fragment {

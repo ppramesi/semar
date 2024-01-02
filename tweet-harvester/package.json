@@ -1,0 +1,58 @@
+{
+  "name": "tweet-harvester",
+  "description": "A Twitter crawler helper with auth",
+  "version": "2.4.2",
+  "license": "MIT",
+  "author": "Helmi Satria",
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "@helmisatria:registry": "https://npm.pkg.github.com/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/helmisatria/tweet-harvest.git"
+  },
+  "files": [
+    "dist/",
+    "!dist/dev.js"
+  ],
+  "dependencies": {
+    "@playwright/test": "^1.33.0",
+    "axios": "^1.6.3",
+    "chalk": "^4.1.2",
+    "dayjs": "^1.11.7",
+    "dotenv": "^16.0.3",
+    "lodash": "^4.17.21",
+    "node-schedule": "^2.1.1",
+    "pg-promise": "^11.5.4",
+    "playwright-extra": "^4.3.6",
+    "prompts": "^2.4.2",
+    "puppeteer-extra-plugin-stealth": "^2.11.2",
+    "yargs": "^17.7.2",
+    "znv": "^0.3.2",
+    "zod": "^3.21.4"
+  },
+  "devDependencies": {
+    "@types/axios": "^0.14.0",
+    "@types/lodash": "^4.14.194",
+    "@types/node-schedule": "^2.1.5",
+    "@types/pg-promise": "^5.4.3",
+    "@types/prompts": "^2.4.4",
+    "@types/yargs": "^17.0.24",
+    "pkg": "^5.8.1",
+    "ts-node": "^10.9.1",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "*"
+  },
+  "bin": {
+    "tweet-harvest": "dist/bin.js"
+  },
+  "scripts": {
+    "start:scheduledscraper": "node ./dist/index.js",
+    "start": "ts-node src/crawl.ts",
+    "dev": "npx tsx src/dev.ts",
+    "build": "tsc",
+    "build:pkg": "pkg . --out-path ./bin",
+    "prepublish": "yarn build"
+  }
+}

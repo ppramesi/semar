@@ -17,7 +17,7 @@ export type SemarServerOpts = {
   embeddings: Embeddings;
 };
 
-export default abstract class SemarServer {
+export abstract class SemarServer {
   db: SemarPostgres;
   llm: BaseChatModel;
   embedding: Embeddings;
@@ -50,7 +50,7 @@ export default abstract class SemarServer {
   async generateTags(tweets: Tweet[]): Promise<string[]> {
     const procTweets = TagGenerator.processTweets(tweets);
     const { extracted_tags: tags } = await this.tagGenerator.call({
-      batch_numbers: tweets.length,
+      batch_size: tweets.length,
       tweets: procTweets,
     });
 
@@ -63,11 +63,18 @@ export default abstract class SemarServer {
   }
 
   async checkDuplicates(tweets: Tweet[]): Promise<boolean> {
-    const rand = Math.round(Math.random() * tweets.length);
+    let text: string | null = null;
+    while(_.isNil(text)) {
+      const rand = Math.round(Math.random() * (tweets.length - 1));
+      text = tweets[rand].text;
+    }
     const docsResult = await this.db.summaryVectorstore.similaritySearch(
-      tweets[rand].text,
+      text,
       3,
     );
+    if (docsResult.length === 0) {
+      return false;
+    }
     const procTweets = DuplicateChecker.processTweets(tweets);
     const dupeCheckResults = await Promise.all(
       docsResult
@@ -128,6 +135,9 @@ export default abstract class SemarServer {
         k,
         relevancyFilter,
       );
+    if (searchResults.length === 0) {
+      return [];
+    }
     const docs = searchResults.map((res) => res[0]);
     return SemarPostgres.fromSearchResultsToTweets(docs);
   }
@@ -135,22 +145,25 @@ export default abstract class SemarServer {
   async aggregateTweets(tweets: Tweet[]): Promise<Tweet[][]> {
     const procTweets = TweetAggregator.processTweets(tweets);
     const { aggregated_tweets: groupedTweetIds } = await this.aggregator.call({
-      batch_numbers: tweets.length,
+      batch_size: tweets.length,
       tweets: procTweets,
     });
+    // Map for quick ID to Tweet object lookup
+    const idToTweetMap = new Map(tweets.map(tweet => [tweet.id, tweet]));
 
-    return Promise.all(
-      (groupedTweetIds as string[][]).map((tweetIds) => {
-        return Promise.all(tweetIds.map(this.db.fetchTweet));
-      }),
-    );
+    // Transform groupedTweetIds to groups of Tweet objects
+    return (groupedTweetIds as string[][]).map(group => 
+      group.map(tweetId => idToTweetMap.get(tweetId))
+    ) as Tweet[][];
   }
 
-  async summarizeTweets(tweets: Tweet[]): Promise<Summary> {
+  async summarizeTweets(tweets: Tweet[], contextTweets?: Tweet[]): Promise<Summary> {
     const procTweets = TweetSummarizer.processTweets(tweets);
+    const conxTweets = contextTweets && contextTweets.length > 0 ? TweetSummarizer.processTweets(contextTweets) : "";
     const { text: result } = await this.summarizer.call({
-      batch_numbers: tweets.length,
+      batch_size: tweets.length,
       tweets: procTweets,
+      context_tweets: conxTweets
     });
 
     return {
@@ -220,8 +233,7 @@ export default abstract class SemarServer {
               this.saveTweets(tweets),
             ]);
 
-            const combinedTweets = [...relevantTweets, ...tweets];
-            return this.summarizeTweets(combinedTweets);
+            return this.summarizeTweets(tweets, relevantTweets);
           } else {
             return null;
           }

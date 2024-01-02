@@ -8,13 +8,13 @@ import { TweetChain } from "./base.js";
 import { BaseChatModel } from "langchain/chat_models/base";
 import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
-import { JsonKeyOutputFunctionsParser } from "langchain/output_parsers";
 import {
   DUPLICATE_CHECKER_PROMPT,
   DUPLICATE_CHECKER_SYSTEM_PROMPT,
 } from "../prompts/duplicate_checker.js";
 import { CallbackManagerForChainRun } from "@langchain/core/callbacks/manager";
 import { ChainValues } from "@langchain/core/utils/types";
+import { UnbrittledKeyOutputFunctionParser } from "../parsers/function_output_parser.js";
 
 const keyName = "duplicated";
 
@@ -46,12 +46,12 @@ export class DuplicateChecker extends TweetChain {
     super({
       llm: opts.llm,
       prompt: buildPrompt(),
-      outputParser: new JsonKeyOutputFunctionsParser({ attrName: keyName }),
+      outputParser: new UnbrittledKeyOutputFunctionParser({ attrName: keyName }),
       llmKwargs: {
         functions: [
           {
             name: functionName,
-            description: `Output formatter. Should always be used to format your response to the user.`,
+            description: `Output formatter. Should always be used to format your response to the user. The output should be formatted correctly such that it can be parsed using Javascript's JSON.parse(). Mind the trailing commas.`,
             parameters: zodToJsonSchema(outputSchema),
           },
         ],
