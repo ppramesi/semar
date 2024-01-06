@@ -1,6 +1,6 @@
 import { crawlReturned } from "./crawl";
 import axios from "axios";
-import { Database } from "./db";
+import dbInstance, { Database } from "./db";
 import crypto from 'crypto';
 
 export type RunManagerConfig = {
@@ -45,7 +45,7 @@ export class RunManager {
   constructor(config: RunManagerConfig) {
     this.accessToken = config.accessToken;
     this.accountsSource = config.accountsSource;
-    this.db = new Database();
+    this.db = dbInstance;
     this.period = config.period;
     this.tweetCount = config.tweetCount;
     this.processorUrl = config.processorUrl;
