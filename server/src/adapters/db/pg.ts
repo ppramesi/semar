@@ -87,6 +87,9 @@ export class SemarPostgres<
         contentColumnName: "text",
         metadataColumnName: "metadata",
       },
+      extraColumns: [
+        { name: "date", type: "TIMESTAMP", returned: true },
+      ]
     };
 
     const tweetPgvsArgsSansExt = {
@@ -289,12 +292,20 @@ export class SemarPostgres<
     try {
       const opts = summaries.reduce(
         (acc, summary, idx) => {
+          const date = new Date()
+            .toISOString()
+            .replace("T", " ")
+            .replace(/\.\d+Z$/, "");
           acc.embeddings.push(embeddings[idx]);
           acc.docs.push(
             new Document({
               pageContent: summary.text,
             }),
           );
+          const pushParams: { date: string } = {
+            date
+          };
+          acc.opts.extraColumns.push(pushParams);
           acc.opts.ids.push(summary.id);
           return acc;
         },

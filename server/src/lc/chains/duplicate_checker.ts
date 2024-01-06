@@ -32,7 +32,7 @@ const buildPrompt = () =>
       SystemMessagePromptTemplate.fromTemplate(DUPLICATE_CHECKER_SYSTEM_PROMPT),
       HumanMessagePromptTemplate.fromTemplate(DUPLICATE_CHECKER_PROMPT),
     ],
-    inputVariables: ["summary", "tweets"],
+    inputVariables: ["summary", "tweets", "summary_date"],
   });
 
 export type DuplicateCheckerOpts = {
@@ -66,7 +66,7 @@ export class DuplicateChecker extends TweetChain {
     values: any,
     runManager?: CallbackManagerForChainRun | undefined,
   ): Promise<ChainValues> {
-    const { duplicated } = await this._call(values, runManager);
+    const { duplicated } = await super._call(values, runManager);
 
     return { duplicated: duplicated === "true" };
   }

@@ -1,66 +1,76 @@
-import schedule, { RecurrenceRule, Job } from "node-schedule";
+import { ToadScheduler, SimpleIntervalJob, SimpleIntervalSchedule, AsyncTask } from "toad-scheduler";
 import { RunManager } from "./manager";
+import { v4 } from "uuid";
 
 export type SchedulerConfig = {
-  rule: string | RecurrenceRule;
+  rule: SimpleIntervalSchedule;
   runManager: RunManager;
 };
 
-export function createRecurrenceRule(hours: number): RecurrenceRule {
-  if (hours <= 0) {
-      throw new Error('Hours must be greater than 0.');
+export function createRecurrenceRule(hours: number): SimpleIntervalSchedule {
+  const schedule: SimpleIntervalSchedule = {
+    runImmediately: true
+  };
+  const wholeHours = Math.floor(hours);
+  const minutes = Math.floor((hours - Math.floor(hours)) * 60);
+  const seconds = Math.floor((minutes - Math.floor(minutes)) * 60);
+
+  if (wholeHours > 0) {
+    schedule.hours = wholeHours;
   }
-
-  const rule = new RecurrenceRule();
-
-  if (hours < 24) {
-      // For intervals less than 24 hours
-      const totalMinutes = hours * 60;
-      const wholeHours = Math.floor(hours);
-      const minutes = Math.round((hours - wholeHours) * 60);
-
-      rule.minute = new schedule.Range(0, totalMinutes, minutes);
-      rule.hour = new schedule.Range(wholeHours, 23, wholeHours);
-  } else {
-      // For intervals of 24 hours or more
-      const days = Math.round(hours / 24);
-      rule.dayOfWeek = new schedule.Range(0, 6, days);
-      rule.hour = 0;  // or any other specific hour of the day
-      rule.minute = 0;
+  if (minutes > 0) {
+    schedule.minutes = minutes;
   }
-
-  return rule;
+  if (seconds > 0) {
+    schedule.seconds = seconds;
+  }
+  
+  return schedule;
 }
 
 export class Scheduler {
   paused: boolean;
-  job: Job;
-  rule: string | RecurrenceRule;
+  job: SimpleIntervalJob;
+  rule: SimpleIntervalSchedule;
   manager: RunManager;
+  scheduler: ToadScheduler;
+  ids: string[] = [];
   constructor(config: SchedulerConfig){
     this.rule = config.rule;
     this.manager = config.runManager;
     this.paused = false;
+    this.scheduler = new ToadScheduler();
   }
 
   async startJob() {
-    this.job = schedule.scheduleJob(this.rule, () => {
-      if (!this.paused) {
-        this.manager.run()
+    const id = v4();
+    this.ids.push(id);
+    const task = new AsyncTask(
+      id, 
+      async () => {
+        if (!this.paused) {
+          return this.manager.run();
+        }
+      },
+      (err: Error) => {
+        console.error(err);
       }
-    });
-    await this.manager.run();
+    )
+    this.job = new SimpleIntervalJob(this.rule, task);
+    this.scheduler.addSimpleIntervalJob(this.job);
   }
 
-  endJob() {
-    this.job.cancel();
+  endScheduler() {
+    this.scheduler.stop();
   }
 
   pause() {
+    this.job.stop();
     this.paused = true;
   }
 
   unpause() {
+    this.job.start();
     this.paused = false;
   }
 }

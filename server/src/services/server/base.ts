@@ -78,11 +78,11 @@ export abstract class SemarServer {
     const procTweets = DuplicateChecker.processTweets(tweets);
     const dupeCheckResults = await Promise.all(
       docsResult
-        .map((v) => v.pageContent)
         .map((summary) => {
           return this.dupeChecker.call({
             tweets: procTweets,
-            summary,
+            summary: summary.pageContent,
+            summary_date: summary.metadata["date"]
           });
         }),
     );
