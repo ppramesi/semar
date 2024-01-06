@@ -2,12 +2,12 @@
   "extends": "@tsconfig/recommended",
   "compilerOptions": {
     "outDir": "./dist",
-    "target": "ES2021",
     "lib": [
       "ES2021",
       "ES2022.Object",
       "DOM"
     ],
+    "target": "ES2021",
     "module": "NodeNext",
     "moduleResolution": "nodenext",
     "esModuleInterop": true,

@@ -6,7 +6,8 @@
     "format": "prettier --write \"src\"",
     "build": "yarn clean & tsc",
     "start": "node ./dist/index.js",
-    "clean": "rimraf dist/"
+    "clean": "rimraf dist/",
+		"test:single": "NODE_OPTIONS=--experimental-vm-modules yarn run jest --config ./jest.config.cjs --testTimeout 100000"
   },
   "devDependencies": {
     "@tsconfig/recommended": "^1.0.3",

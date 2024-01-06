@@ -68,6 +68,6 @@ export class DuplicateChecker extends TweetChain {
   ): Promise<ChainValues> {
     const { duplicated } = await super._call(values, runManager);
 
-    return { duplicated: duplicated === "true" };
+    return { duplicate: duplicated === "true" };
   }
 }

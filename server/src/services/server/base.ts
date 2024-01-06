@@ -87,7 +87,7 @@ export abstract class SemarServer {
         }),
     );
 
-    return !dupeCheckResults.some((v) => !v);
+    return !dupeCheckResults.some(v => !(v.duplicate));
   }
 
   async embedTweets(tweets: Tweet[]): Promise<number[][]> {
@@ -207,6 +207,7 @@ export abstract class SemarServer {
     const tagsEmbeddings = await Promise.all(
       rawAggregated.map(async (tweets) => {
         const isDupe = await this.checkDuplicates(tweets);
+
         if (!isDupe) {
           return Promise.all([
             Promise.resolve(tweets),
