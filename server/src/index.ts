@@ -9,7 +9,10 @@ dotenv.config();
 
 const pgp = pgPromise();
 
-async function connectWithRetry(maxRetries: number = 5, delayMillis: number = 2000) {
+async function connectWithRetry(
+  maxRetries: number = 5,
+  delayMillis: number = 2000,
+) {
   let retries = maxRetries;
 
   while (retries > 0) {
@@ -28,10 +31,14 @@ async function connectWithRetry(maxRetries: number = 5, delayMillis: number = 20
       console.log("Database connection established.");
       return pgpDb;
     } catch (err) {
-      console.error("Failed to connect to the database. Retrying in", delayMillis, "ms");
+      console.error(
+        "Failed to connect to the database. Retrying in",
+        delayMillis,
+        "ms",
+      );
       console.error(err);
       retries--;
-      await new Promise(resolve => setTimeout(resolve, delayMillis));
+      await new Promise((resolve) => setTimeout(resolve, delayMillis));
     }
   }
 

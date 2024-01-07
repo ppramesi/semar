@@ -6,7 +6,7 @@ type AuthSource = {
   source: string;
 };
 
-class AuthStore {
+export class AuthStore {
   authSources: AuthSource[];
   type: AuthStoreSource;
   loadSourceDeferrer: DeferredPromise;
@@ -38,13 +38,18 @@ class AuthStore {
     }
   }
 
+  async sourceLength(){
+    await this.loadSourceDeferrer;
+    return this.authSources.length;
+  }
+
   async rotateAuth(){
     await this.loadSourceDeferrer;
     const currentAuth = this.authSources[this.currentIndex];
     this.currentIndex++;
 
     if (this.currentIndex > this.authSources.length) {
-      throw new Error("Ran out of auth :(");
+      throw new Error("no-auth-left");
     }
 
     return currentAuth;

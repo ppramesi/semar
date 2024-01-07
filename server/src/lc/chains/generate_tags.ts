@@ -17,9 +17,7 @@ const keyName = "extracted_tags";
 
 const outputSchema = z.object({
   [keyName]: z
-    .array(
-      z.array(z.string().describe("Extracted tags from the tweets."))
-    )
+    .array(z.array(z.string().describe("Extracted tags from the tweets.")))
     .describe(
       "The array containing tags for each tweet. The length of this array should be the same as the number of tweets.",
     ),
@@ -46,7 +44,9 @@ export class TagGenerator extends TweetChain {
     super({
       llm: opts.llm,
       prompt: buildPrompt(),
-      outputParser: new UnbrittledKeyOutputFunctionParser({ attrName: keyName }),
+      outputParser: new UnbrittledKeyOutputFunctionParser({
+        attrName: keyName,
+      }),
       llmKwargs: {
         functions: [
           {

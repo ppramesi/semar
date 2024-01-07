@@ -44,7 +44,9 @@ export class TweetAggregator extends TweetChain {
     super({
       llm: opts.llm,
       prompt: buildPrompt(),
-      outputParser: new UnbrittledKeyOutputFunctionParser({ attrName: keyName }),
+      outputParser: new UnbrittledKeyOutputFunctionParser({
+        attrName: keyName,
+      }),
       llmKwargs: {
         functions: [
           {

@@ -179,7 +179,7 @@ export async function crawl({
     const isLoggedIn = !page.url().includes("/login");
 
     if (!isLoggedIn) {
-      console.error("Invalid twitter auth token. Please check your auth token");
+      console.error("invalid-twitter-token");
       return browser.close();
     }
 
@@ -516,9 +516,9 @@ export async function crawlReturned({
     const isLoggedIn = !page.url().includes("/login");
 
     if (!isLoggedIn) {
-      console.error("Invalid twitter auth token. Please check your auth token");
+      console.error("invalid-twitter-token");
       browser.close();
-      throw new Error("Invalid twitter auth token. Please check your auth token");
+      throw new Error("invalid-twitter-token");
     }
 
     if (IS_SEARCH_MODE) {

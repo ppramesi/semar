@@ -31,8 +31,9 @@ RUN cd /tmp && \
 
 RUN echo 'CREATE EXTENSION IF NOT EXISTS "uuid-ossp";' >> /docker-entrypoint-initdb.d/00-uuid-ossp.sql
 RUN echo 'CREATE EXTENSION IF NOT EXISTS vector;' >> /docker-entrypoint-initdb.d/01-vector.sql
-RUN echo 'CREATE TABLE IF NOT EXISTS scrape_accounts (id UUID NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY, account_name TEXT);' >> /docker-entrypoint-initdb.d/02-init-table.sql
-RUN echo 'CREATE TABLE IF NOT EXISTS auth_tokens (id UUID NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY, auth_token TEXT);' >> /docker-entrypoint-initdb.d/02-init-table.sql
+RUN echo 'CREATE TABLE IF NOT EXISTS scrape_accounts (id UUID NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY, name TEXT);' >> /docker-entrypoint-initdb.d/02-init-table.sql
+RUN echo 'CREATE TABLE IF NOT EXISTS relevant_tags (id UUID NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY, tag TEXT);' >> /docker-entrypoint-initdb.d/02-init-table.sql
+RUN echo 'CREATE TABLE IF NOT EXISTS auth_tokens (id UUID NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY, token TEXT);' >> /docker-entrypoint-initdb.d/02-init-table.sql
 RUN echo 'CREATE TABLE IF NOT EXISTS summaries (id UUID NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY, text TEXT, metadata JSONB, date TIMESTAMP, embedding vector(1536));' >> /docker-entrypoint-initdb.d/02-init-table.sql
 RUN echo 'CREATE TABLE IF NOT EXISTS tweets (id UUID NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY, text TEXT, metadata JSONB, embedding vector(1536), date TIMESTAMP, url TEXT, tags TEXT);' >> /docker-entrypoint-initdb.d/02-init-table.sql
 

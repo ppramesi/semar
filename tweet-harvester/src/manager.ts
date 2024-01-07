@@ -2,10 +2,13 @@ import { crawlReturned } from "./crawl";
 import axios from "axios";
 import dbInstance, { Database } from "./db";
 import crypto from 'crypto';
+import authStoreInstance, { AuthStore } from "./auth-store";
+import { TweetMappedReturn } from "./types/tweets.types";
+import { isNil } from "lodash";
 
 export type RunManagerConfig = {
   accessToken: string;
-  accountsSource: "ENV" | "DB";
+  accountsSource: "env" | "db";
   period: number;
   tweetCount: number;
   processorUrl: string;
@@ -36,14 +39,13 @@ function buildProcessTweetsUrl(baseUrl: string) {
 }
 
 export class RunManager {
-  accessToken: string;
-  accountsSource: "ENV" | "DB";
+  authStore: AuthStore = authStoreInstance;
+  accountsSource: "env" | "db";
   db: Database;
   period: number;
   tweetCount: number;
   processorUrl: string;
   constructor(config: RunManagerConfig) {
-    this.accessToken = config.accessToken;
     this.accountsSource = config.accountsSource;
     this.db = dbInstance;
     this.period = config.period;
@@ -52,10 +54,10 @@ export class RunManager {
   }
 
   async fetchAccounts() {
-    if (this.accountsSource === "DB") {
+    if (this.accountsSource === "db") {
       const accounts = await this.db.fetchScrapeAccounts();
       return accounts.map(v => v.name);
-    } else if (this.accountsSource === "ENV") {
+    } else if (this.accountsSource === "env") {
       const accounts = process.env.SCRAPE_ACCOUNTS as string;
       return accounts.split(",");
     } else {
@@ -75,14 +77,26 @@ export class RunManager {
 
   async run() {
     const searchTerms = this.buildSearchTerms(await this.fetchAccounts());
-    const data = await crawlReturned({
-      ACCESS_TOKEN: this.accessToken,
-      SEARCH_KEYWORDS: searchTerms,
-      SEARCH_FROM_DATE: hoursBeforeRightMeow(this.period),
-      SEARCH_TO_DATE: new Date(),
-      TARGET_TWEET_COUNT: this.tweetCount,
-      SEARCH_TAB: "LATEST"
-    });
+    let accessToken = await this.authStore.getAuth();
+    let data: TweetMappedReturn[];
+    while (isNil(data)) {
+      try {
+        data = await crawlReturned({
+          ACCESS_TOKEN: accessToken.source,
+          SEARCH_KEYWORDS: searchTerms,
+          SEARCH_FROM_DATE: hoursBeforeRightMeow(this.period),
+          SEARCH_TO_DATE: new Date(),
+          TARGET_TWEET_COUNT: this.tweetCount,
+          SEARCH_TAB: "LATEST"
+        });    
+      } catch (error) {
+        if ((error as Error).message === "invalid-twitter-token") {
+          accessToken = await this.authStore.rotateAuth();
+        } else {
+          throw error;
+        }
+      }
+    }
 
     const tweets = data.map(tweet => {
       const { full_text: text, id_str: id, created_at: createdAt } = tweet.tweet;

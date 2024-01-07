@@ -24,7 +24,7 @@ export class SemarHttpServer extends SemarServer {
         tweets: Tweet[];
         ids: string[];
       };
-      console.log({ rawTweets })
+      console.log({ rawTweets });
       if (!_.isNil(rawTweets) && !_.isNil(ids)) {
         res.status(400).send({
           status: "error",

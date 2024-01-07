@@ -25,7 +25,7 @@ const buildPrompt = () =>
       SystemMessagePromptTemplate.fromTemplate(RELEVANCY_SYSTEM_PROMPT),
       HumanMessagePromptTemplate.fromTemplate(RELEVANCY_PROMPT),
     ],
-    inputVariables: ["batch_size", "tweets", "topic"],
+    inputVariables: ["batch_size", "tweets", "topics"],
   });
 
 export type RelevancyOpts = {
@@ -39,7 +39,9 @@ export class TweetRelevancyEvaluator extends TweetChain {
     super({
       llm: opts.llm,
       prompt: buildPrompt(),
-      outputParser: new UnbrittledKeyOutputFunctionParser({ attrName: keyName }),
+      outputParser: new UnbrittledKeyOutputFunctionParser({
+        attrName: keyName,
+      }),
       llmKwargs: {
         functions: [
           {

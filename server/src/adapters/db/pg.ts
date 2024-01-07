@@ -9,6 +9,7 @@ import { User } from "../../types/user.js";
 import { Embeddings } from "langchain/embeddings/base";
 import { Document } from "langchain/document";
 import _ from "lodash";
+import { Tag } from "../../types/tag.js";
 
 interface CoreColumns {
   id: string;
@@ -87,9 +88,7 @@ export class SemarPostgres<
         contentColumnName: "text",
         metadataColumnName: "metadata",
       },
-      extraColumns: [
-        { name: "date", type: "TIMESTAMP", returned: true },
-      ]
+      extraColumns: [{ name: "date", type: "TIMESTAMP", returned: true }],
     };
 
     const tweetPgvsArgsSansExt = {
@@ -105,7 +104,7 @@ export class SemarPostgres<
       extraColumns: [
         { name: "date", type: "TIMESTAMP", returned: true },
         { name: "url", type: "TEXT", returned: true },
-        { name: "tags", type: "TEXT", returned: true }
+        { name: "tags", type: "TEXT", returned: true },
       ],
     };
 
@@ -138,9 +137,9 @@ export class SemarPostgres<
     try {
       await Promise.all([
         this.tweetVectorstore.ensureTableInDatabase(),
-        this.summaryVectorstore.ensureTableInDatabase()
+        this.summaryVectorstore.ensureTableInDatabase(),
       ]).catch((error) => {
-        console.error(error);  
+        console.error(error);
       });
     } catch (error) {
       console.error(error);
@@ -180,7 +179,7 @@ export class SemarPostgres<
         id: doc.metadata.id,
         date: doc.metadata.date,
         url: doc.metadata.url,
-        text: doc.pageContent
+        text: doc.pageContent,
       } as Tweet;
 
       if (doc.metadata.tags && (doc.metadata.tags as string).length > 0) {
@@ -191,7 +190,10 @@ export class SemarPostgres<
     });
   }
 
-  async fetchTweets(limit: number, filter?: PGFilterWithJoin): Promise<Tweet[]> {
+  async fetchTweets(
+    limit: number,
+    filter?: PGFilterWithJoin,
+  ): Promise<Tweet[]> {
     const docs = await this.tweetstore.similaritySearchVectorWithScore(
       [],
       limit,
@@ -251,10 +253,10 @@ export class SemarPostgres<
               pageContent: tweet.text,
             }),
           );
-          const pushParams: { url: string, date: string, tags?: string } = {
-            url: tweet.url, 
-            date
-          }
+          const pushParams: { url: string; date: string; tags?: string } = {
+            url: tweet.url,
+            date,
+          };
           if (!_.isNil(tweet.tags)) {
             pushParams.tags = JSON.stringify(tweet.tags);
           }
@@ -303,7 +305,7 @@ export class SemarPostgres<
             }),
           );
           const pushParams: { date: string } = {
-            date
+            date,
           };
           acc.opts.extraColumns.push(pushParams);
           acc.opts.ids.push(summary.id);
@@ -351,18 +353,50 @@ export class SemarPostgres<
   async fetchSummaries(limit?: number) {
     try {
       let summaries: Summary[];
-      if(limit) {
+      if (limit) {
         summaries = await this.pgInstance.manyOrNone<Summary>(
           "SELECT * FROM summaries LIMIT $1",
-          [limit]
+          [limit],
         );
       } else {
-        summaries = await this.pgInstance.manyOrNone<Summary>("SELECT * FROM summaries");
+        summaries = await this.pgInstance.manyOrNone<Summary>(
+          "SELECT * FROM summaries",
+        );
       }
 
       return summaries;
     } catch (error) {
       throw new Error(`Error fetching summaries: ${error}`);
+    }
+  }
+
+  async fetchRelevancyTags(): Promise<Tag[]> {
+    try {
+      const results = await this.pgInstance.manyOrNone<Tag>("SELECT id, tag FROM relevant_tags;");
+      return results;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  }
+
+  async fetchAuthTokens() {
+    try {
+      const results = await this.pgInstance.manyOrNone<{ id: string, token: string }>("SELECT * FROM auth_tokens;")
+      return results.map(t => t.token);
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  }
+
+  async fetchScrapeAccounts() {
+    try {
+      const result = await this.pgInstance.manyOrNone('SELECT * FROM scrape_accounts;');
+      return result;
+    } catch (error) {
+      console.error('Error fetching scrape accounts:', error);
+      throw error;
     }
   }
 

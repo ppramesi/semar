@@ -12,7 +12,7 @@ async function run(){
     const period = 1;
     const runManager = new RunManager({
       accessToken: process.env.ACCESS_TOKEN,
-      accountsSource: "ENV",
+      accountsSource: process.env.ACCOUNTS_SOURCE as "env" | "db",
       period,
       tweetCount: 20,
       processorUrl: process.env.TWEET_PROCESSOR_URL

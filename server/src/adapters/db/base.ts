@@ -2,6 +2,7 @@ import _ from "lodash";
 import type { FetchTweetsOpts, Tweet } from "../../types/tweet.js";
 import { User } from "../../types/user.js";
 import { VectorStore } from "langchain/vectorstores/base";
+import { Tag } from "../../types/tag.js";
 
 export type DatabaseOpts = {
   vectorstore: VectorStore;
@@ -27,4 +28,6 @@ export abstract class Database {
   abstract fetchUser(id: string): Promise<User>;
 
   abstract insertUser(user: User): Promise<User>;
+
+  abstract fetchRelevancyTags(): Promise<Tag[]>;
 }

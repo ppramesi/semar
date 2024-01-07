@@ -1,7 +1,10 @@
-import { JsonKeyOutputFunctionsParser, JsonOutputFunctionsParser } from "langchain/output_parsers";
+import {
+  JsonKeyOutputFunctionsParser,
+  JsonOutputFunctionsParser,
+} from "langchain/output_parsers";
 
 function sanitizeJSON(input: string): string {
-  return input.replace(/,\s*([}\]])/g, '$1');
+  return input.replace(/,\s*([}\]])/g, "$1");
 }
 
 class UnbrittledJsonOutputFunctionParser extends JsonOutputFunctionsParser {
@@ -11,9 +14,11 @@ class UnbrittledJsonOutputFunctionParser extends JsonOutputFunctionsParser {
   }
 }
 
-export class UnbrittledKeyOutputFunctionParser<T = string> extends JsonKeyOutputFunctionsParser<T> {
-  constructor({ attrName }: { attrName: string }){
-    super({attrName})
+export class UnbrittledKeyOutputFunctionParser<
+  T = string,
+> extends JsonKeyOutputFunctionsParser<T> {
+  constructor({ attrName }: { attrName: string }) {
+    super({ attrName });
     this.outputParser = new UnbrittledJsonOutputFunctionParser();
   }
 }
