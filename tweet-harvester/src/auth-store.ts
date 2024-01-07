@@ -12,21 +12,16 @@ export class AuthStore {
   loadSourceDeferrer: DeferredPromise;
   db: Database;
   currentIndex: number = 0;
+  sourceLoaded: boolean = false;
   constructor(type: AuthStoreSource){
     this.type = type;
     this.authSources = [];
     this.loadSourceDeferrer = deferrer();
     this.db = dbInstance;
-    this.loadSource()
-      .then(() => {
-        this.loadSourceDeferrer.resolve();
-      })
-      .catch(() => {
-        this.loadSourceDeferrer.reject();
-      });
   }
 
-  private async loadSource(){
+  async loadSource(){
+    this.currentIndex = 0;
     if (this.type === "db") {
       const authTokens = await this.db.getAuthTokens();
       this.authSources = authTokens.map(source => ({ source }));
@@ -44,6 +39,18 @@ export class AuthStore {
   }
 
   async rotateAuth(){
+    if (!this.sourceLoaded) {
+      await this.loadSource()
+        .then(() => {
+          this.loadSourceDeferrer.resolve();
+        })
+        .catch(() => {
+          this.loadSourceDeferrer.reject();
+        });
+        
+      this.sourceLoaded = true;
+    }
+
     await this.loadSourceDeferrer;
     const currentAuth = this.authSources[this.currentIndex];
     this.currentIndex++;
@@ -56,6 +63,18 @@ export class AuthStore {
   }
 
   async getAuth(){
+    if (!this.sourceLoaded) {
+      await this.loadSource()
+        .then(() => {
+          this.loadSourceDeferrer.resolve();
+        })
+        .catch(() => {
+          this.loadSourceDeferrer.reject();
+        });
+        
+      this.sourceLoaded = true;
+    }
+    
     await this.loadSourceDeferrer;
 
     return this.authSources[this.currentIndex];

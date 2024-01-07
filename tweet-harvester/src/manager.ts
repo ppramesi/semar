@@ -4,10 +4,9 @@ import dbInstance, { Database } from "./db";
 import crypto from 'crypto';
 import authStoreInstance, { AuthStore } from "./auth-store";
 import { TweetMappedReturn } from "./types/tweets.types";
-import { isNil } from "lodash";
+import _ from "lodash";
 
 export type RunManagerConfig = {
-  accessToken: string;
   accountsSource: "env" | "db";
   period: number;
   tweetCount: number;
@@ -79,7 +78,7 @@ export class RunManager {
     const searchTerms = this.buildSearchTerms(await this.fetchAccounts());
     let accessToken = await this.authStore.getAuth();
     let data: TweetMappedReturn[];
-    while (isNil(data)) {
+    while (_.isNil(data)) {
       try {
         data = await crawlReturned({
           ACCESS_TOKEN: accessToken.source,
@@ -114,7 +113,7 @@ export class RunManager {
     const postCfg: AxiosRequestConfig = {};
 
     if (
-      !isNil(process.env.AUTH_TOKEN) && 
+      !_.isNil(process.env.AUTH_TOKEN) && 
       (process.env.AUTH_TOKEN as string).length > 0
     ) {
       postCfg.headers["auth-token"] = process.env.AUTH_TOKEN;

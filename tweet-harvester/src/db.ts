@@ -77,6 +77,7 @@ export class Database {
     await this.initDeferrer;
     try {
       const results = await this.pg.manyOrNone<{ id: string, token: string }>("SELECT * FROM auth_tokens;")
+      console.log("using twitter auths: ", { results });
       return results.map(t => t.token);
     } catch (error) {
       console.error(error);

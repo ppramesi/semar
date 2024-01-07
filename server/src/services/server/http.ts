@@ -1,7 +1,7 @@
 import express, { Express, NextFunction, Response, Request } from "express";
 import { SemarServer, SemarServerOpts } from "./base.js";
 import { Tweet } from "../../types/tweet.js";
-import _, { isNil } from "lodash";
+import _ from "lodash";
 
 interface SemarHttpServerOpts extends SemarServerOpts {
   port: number;
@@ -13,7 +13,7 @@ function buildAuthMiddleware(baseAuthToken?: string) {
     res: Response,
     next: NextFunction,
   ) {
-    if (isNil(baseAuthToken)) {
+    if (_.isNil(baseAuthToken)) {
       next();
     }
     const authToken = req.header("auth-token");

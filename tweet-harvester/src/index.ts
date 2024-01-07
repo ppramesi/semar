@@ -3,7 +3,7 @@ import { Scheduler, createRecurrenceRule } from "./scheduler";
 import { RunManager } from "./manager";
 import http from "http";
 import url from "url";
-import { isNil } from "lodash";
+import _ from "lodash";
 
 config();
 
@@ -12,7 +12,6 @@ async function run(){
     let started = false;
     const period = 1;
     const runManager = new RunManager({
-      accessToken: process.env.ACCESS_TOKEN,
       accountsSource: process.env.ACCOUNTS_SOURCE as "env" | "db",
       period,
       tweetCount: 20,
@@ -26,7 +25,7 @@ async function run(){
       const auth = req.headers["auth-token"];
 
       if (
-        !isNil(process.env.AUTH_TOKEN) && 
+        !_.isNil(process.env.AUTH_TOKEN) && 
         (process.env.AUTH_TOKEN as string).length > 0 && 
         process.env.AUTH_TOKEN !== auth  
       ) {
