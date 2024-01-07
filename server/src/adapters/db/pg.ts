@@ -88,7 +88,10 @@ export class SemarPostgres<
         contentColumnName: "text",
         metadataColumnName: "metadata",
       },
-      extraColumns: [{ name: "date", type: "TIMESTAMP", returned: true }],
+      extraColumns: [
+        { name: "date", type: "TIMESTAMP", returned: true },
+        { name: "ref_tweets", type: "TEXT", returned: true },
+      ],
     };
 
     const tweetPgvsArgsSansExt = {
@@ -304,8 +307,9 @@ export class SemarPostgres<
               pageContent: summary.text,
             }),
           );
-          const pushParams: { date: string } = {
+          const pushParams: { date: string; ref_tweets: string } = {
             date,
+            ref_tweets: JSON.stringify(summary.ref_tweets),
           };
           acc.opts.extraColumns.push(pushParams);
           acc.opts.ids.push(summary.id);
@@ -372,7 +376,9 @@ export class SemarPostgres<
 
   async fetchRelevancyTags(): Promise<Tag[]> {
     try {
-      const results = await this.pgInstance.manyOrNone<Tag>("SELECT id, tag FROM relevant_tags;");
+      const results = await this.pgInstance.manyOrNone<Tag>(
+        "SELECT id, tag FROM relevant_tags;",
+      );
       return results;
     } catch (error) {
       console.error(error);
@@ -382,8 +388,11 @@ export class SemarPostgres<
 
   async fetchAuthTokens() {
     try {
-      const results = await this.pgInstance.manyOrNone<{ id: string, token: string }>("SELECT * FROM auth_tokens;")
-      return results.map(t => t.token);
+      const results = await this.pgInstance.manyOrNone<{
+        id: string;
+        token: string;
+      }>("SELECT * FROM auth_tokens;");
+      return results.map((t) => t.token);
     } catch (error) {
       console.error(error);
       throw error;
@@ -392,10 +401,12 @@ export class SemarPostgres<
 
   async fetchScrapeAccounts() {
     try {
-      const result = await this.pgInstance.manyOrNone('SELECT * FROM scrape_accounts;');
+      const result = await this.pgInstance.manyOrNone(
+        "SELECT * FROM scrape_accounts;",
+      );
       return result;
     } catch (error) {
-      console.error('Error fetching scrape accounts:', error);
+      console.error("Error fetching scrape accounts:", error);
       throw error;
     }
   }

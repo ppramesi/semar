@@ -62,4 +62,4 @@ export class AuthStore {
   }
 }
 
-export default new AuthStore(process.env.AUTH_SOURCE as "db" | "env" ?? "env");
+export default new AuthStore(process.env.TWITTER_AUTH_SOURCE as "db" | "env" ?? "env");

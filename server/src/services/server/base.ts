@@ -170,11 +170,22 @@ export abstract class SemarServer {
       tweets: procTweets,
       context_tweets: conxTweets,
     });
+    const allTweets = [...tweets, ...(contextTweets ?? [])];
+    const refTweets = allTweets
+      .filter((t) => {
+        const url = new URL(t.url);
+        const statusId = url.pathname
+          .split("/")
+          .filter((s) => s.length > 0)
+          .pop();
+        return result.includes(statusId);
+      })
+      .map((t) => t.id);
 
     return {
       id: v4(),
       text: result,
-      sources_id: tweets.map((t) => t.id),
+      ref_tweets: refTweets,
     };
   }
 
@@ -203,13 +214,13 @@ export abstract class SemarServer {
 
   async filterRelevantTweets(tweets: Tweet[]) {
     const relevantTags = await this.db.fetchRelevancyTags();
-    if(relevantTags.length > 0){
+    if (relevantTags.length > 0) {
       const { relevant_tweets: ids } = await this.relevancyEvaluator.call({
         batch_size: tweets.length,
         tweets: TweetRelevancyEvaluator.processTweets(tweets),
-        topics: relevantTags.map(t => t.tag).join(",")
+        topics: relevantTags.map((t) => t.tag).join(","),
       });
-      return tweets.filter(t => (ids as string[]).includes(t.id));
+      return tweets.filter((t) => (ids as string[]).includes(t.id));
     } else {
       return tweets;
     }
@@ -254,8 +265,9 @@ export abstract class SemarServer {
               this.fetchRelevantTweets(tweets[0], 5),
               this.saveTweets(tweets),
             ]);
+            const summary = await this.summarizeTweets(tweets, relevantTweets);
 
-            return this.summarizeTweets(tweets, relevantTweets);
+            return summary;
           } else {
             return null;
           }

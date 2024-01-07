@@ -7,7 +7,6 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let pgvsPgvector: IDatabase<any>;
 let semarPostgres: SemarPostgres;
@@ -55,7 +54,7 @@ test("Process Test", async () => {
   console.log({
     tags,
     tokens,
-    accounts
+    accounts,
   });
 
   expect(tags.length).toBeGreaterThan(0);

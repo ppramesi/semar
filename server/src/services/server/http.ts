@@ -1,10 +1,29 @@
-import express, { Express } from "express";
+import express, { Express, NextFunction, Response, Request } from "express";
 import { SemarServer, SemarServerOpts } from "./base.js";
 import { Tweet } from "../../types/tweet.js";
-import _ from "lodash";
+import _, { isNil } from "lodash";
 
 interface SemarHttpServerOpts extends SemarServerOpts {
   port: number;
+}
+
+function buildAuthMiddleware(baseAuthToken?: string) {
+  return function authMiddleware(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ) {
+    if (isNil(baseAuthToken)) {
+      next();
+    }
+    const authToken = req.header("auth-token");
+    if (authToken !== baseAuthToken) {
+      res.status(403).send({ status: "unauthorized" });
+      return;
+    }
+
+    next();
+  };
 }
 
 export class SemarHttpServer extends SemarServer {
@@ -17,6 +36,7 @@ export class SemarHttpServer extends SemarServer {
   }
 
   buildRoute(): void {
+    this.app.use(buildAuthMiddleware(process.env.AUTH_TOKEN));
     this.app.use(express.json());
     this.app.post("/process-tweets", async (req, res) => {
       let tweets: Tweet[];

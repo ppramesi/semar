@@ -61,18 +61,4 @@ export class TagGenerator extends TweetChain {
       },
     });
   }
-
-  // _call(
-  //   values: ChainValues & this["llm"]["CallOptions"],
-  //   runManager?: CallbackManagerForChainRun | undefined,
-  // ): Promise<ChainValues> {
-  //   if (!this.context) throw new Error("Context not set");
-  //   let { cc, bcc, ...rest } = values;
-  //   cc = stringJoinArrayOrNone(cc);
-  //   bcc = stringJoinArrayOrNone(bcc);
-  //   let context: string = Object.entries(this.context)
-  //     .map(([key, value]) => `${key}: ${value}`)
-  //     .join("\n");
-  //   return super._call({ ...rest, context, cc, bcc }, runManager);
-  // }
 }

@@ -3,6 +3,7 @@ import { Scheduler, createRecurrenceRule } from "./scheduler";
 import { RunManager } from "./manager";
 import http from "http";
 import url from "url";
+import { isNil } from "lodash";
 
 config();
 
@@ -22,11 +23,24 @@ async function run(){
       rule: createRecurrenceRule(period)
     });
     const server = http.createServer(async (req, res) => {
+      const auth = req.headers["auth-token"];
+
+      if (
+        !isNil(process.env.AUTH_TOKEN) && 
+        (process.env.AUTH_TOKEN as string).length > 0 && 
+        process.env.AUTH_TOKEN !== auth  
+      ) {
+        res.writeHead(403, {"Content-Type": "text/plain"});
+        res.end(JSON.stringify({status: "unauthorized"}));
+        return;
+      }
+
       if (req.method === "POST") {
         res.writeHead(200, {"Content-Type": "text/plain"});
         res.end(JSON.stringify({status: "use-get-instead"}));
         return;
       }
+      
       const pathname = url.parse(req.url).pathname;
       try {
         if (pathname === "/start") {

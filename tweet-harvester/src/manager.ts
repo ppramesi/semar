@@ -1,5 +1,5 @@
 import { crawlReturned } from "./crawl";
-import axios from "axios";
+import axios, { AxiosRequestConfig } from "axios";
 import dbInstance, { Database } from "./db";
 import crypto from 'crypto';
 import authStoreInstance, { AuthStore } from "./auth-store";
@@ -109,10 +109,19 @@ export class RunManager {
         date: createdAt,
         url: tweetUrl
       }
-    })
+    });
+
+    const postCfg: AxiosRequestConfig = {};
+
+    if (
+      !isNil(process.env.AUTH_TOKEN) && 
+      (process.env.AUTH_TOKEN as string).length > 0
+    ) {
+      postCfg.headers["auth-token"] = process.env.AUTH_TOKEN;
+    }
 
     await axios.post(buildProcessTweetsUrl(this.processorUrl), {
       tweets
-    })
+    }, postCfg);
   }
 }

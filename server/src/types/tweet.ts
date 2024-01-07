@@ -21,5 +21,5 @@ export type FetchTweetsOpts = {
 export type Summary = {
   id: string;
   text: string;
-  sources_id: string[];
+  ref_tweets: string[];
 };
