@@ -28,18 +28,29 @@ function appendCsv(pathStr: string, contents: any, cb?) {
   return fileName;
 }
 
-type ProxyOpts = Parameters<(typeof chromium)["launchPersistentContext"]>[1]["proxy"];
+type ProxyOpts = Parameters<
+  (typeof chromium)["launchPersistentContext"]
+>[1]["proxy"];
 type PartialProxyOpts = Partial<ProxyOpts>;
 
 const proxyOpts: PartialProxyOpts = {};
-if (process.env.PROXY_SERVER && (process.env.PROXY_SERVER as string).length > 0) {
+if (
+  process.env.PROXY_SERVER &&
+  (process.env.PROXY_SERVER as string).length > 0
+) {
   proxyOpts.server = process.env.PROXY_SERVER;
-  if (process.env.PROXY_USERNAME && (process.env.PROXY_USERNAME as string).length > 0) {
+  if (
+    process.env.PROXY_USERNAME &&
+    (process.env.PROXY_USERNAME as string).length > 0
+  ) {
     proxyOpts.username = process.env.PROXY_USERNAME;
     proxyOpts.password = process.env.PROXY_PASSWORD;
   }
 
-  if (process.env.PROXY_BYPASS && (process.env.PROXY_BYPASS as string).length > 0) {
+  if (
+    process.env.PROXY_BYPASS &&
+    (process.env.PROXY_BYPASS as string).length > 0
+  ) {
     proxyOpts.bypass = process.env.PROXY_BYPASS;
   }
 }
@@ -117,26 +128,35 @@ export async function crawl({
   // change spaces to _
   const FOLDER_DESTINATION = "./tweets-data";
   const FUlL_PATH_FOLDER_DESTINATION = path.resolve(FOLDER_DESTINATION);
-  const filename = (OUTPUT_FILENAME || `${SEARCH_KEYWORDS} ${NOW}`).trim().replace(".csv", "");
+  const filename = (OUTPUT_FILENAME || `${SEARCH_KEYWORDS} ${NOW}`)
+    .trim()
+    .replace(".csv", "");
 
-  const FILE_NAME = `${FOLDER_DESTINATION}/${filename}.csv`.replace(/ /g, "_").replace(/:/g, "-");
+  const FILE_NAME = `${FOLDER_DESTINATION}/${filename}.csv`
+    .replace(/ /g, "_")
+    .replace(/:/g, "-");
 
   console.info(chalk.blue("\nOpening twitter search page...\n"));
 
   if (fs.existsSync(FILE_NAME)) {
     console.info(
-      chalk.blue(`\nFound existing file ${FILE_NAME}, renaming to ${FILE_NAME.replace(".csv", ".old.csv")}`)
+      chalk.blue(
+        `\nFound existing file ${FILE_NAME}, renaming to ${FILE_NAME.replace(
+          ".csv",
+          ".old.csv",
+        )}`,
+      ),
     );
     fs.renameSync(FILE_NAME, FILE_NAME.replace(".csv", ".old.csv"));
   }
 
   let TWEETS_NOT_FOUND_ON_CURRENT_TAB = false;
-  
-  const launchOpts: LaunchOptions = { 
-    headless: HEADLESS_MODE,
-  }
 
-  if(Object.keys(proxyOpts).length > 0) {
+  const launchOpts: LaunchOptions = {
+    headless: HEADLESS_MODE,
+  };
+
+  if (Object.keys(proxyOpts).length > 0) {
     launchOpts.proxy = proxyOpts as ProxyOpts;
   }
 
@@ -202,13 +222,18 @@ export async function crawl({
     };
 
     async function scrollAndSave() {
-      while (allData.tweets.length < TARGET_TWEET_COUNT && timeoutCount < TIMEOUT_LIMIT) {
+      while (
+        allData.tweets.length < TARGET_TWEET_COUNT &&
+        timeoutCount < TIMEOUT_LIMIT
+      ) {
         // Wait for the next response or 3 seconds, whichever comes first
         const response = await Promise.race([
           // includes "SearchTimeline" because it's the endpoint for the search result
           // or also includes "TweetDetail" because it's the endpoint for the tweet detail
           page.waitForResponse(
-            (response) => response.url().includes("SearchTimeline") || response.url().includes("TweetDetail")
+            (response) =>
+              response.url().includes("SearchTimeline") ||
+              response.url().includes("TweetDetail"),
           ),
           page.waitForTimeout(5000),
         ]);
@@ -224,13 +249,17 @@ export async function crawl({
             responseJson = await response.json();
           } catch (error) {
             if ((await response.text()).toLowerCase().includes("rate limit")) {
-              console.error(`Error parsing response json: ${JSON.stringify(response)}`);
               console.error(
-                `Most likely, you have already exceeded the Twitter rate limit. Read more on https://twitter.com/elonmusk/status/1675187969420828672?s=46.`
+                `Error parsing response json: ${JSON.stringify(response)}`,
+              );
+              console.error(
+                `Most likely, you have already exceeded the Twitter rate limit. Read more on https://twitter.com/elonmusk/status/1675187969420828672?s=46.`,
               );
 
               // wait for rate limit window passed before retrying
-              await page.waitForTimeout(calculateForRateLimit(rateLimitCount++));
+              await page.waitForTimeout(
+                calculateForRateLimit(rateLimitCount++),
+              );
 
               // click retry
               await page.click("text=Retry");
@@ -243,15 +272,22 @@ export async function crawl({
           // reset the rate limit exception count
           rateLimitCount = 0;
 
-          const isTweetDetail = responseJson.data.threaded_conversation_with_injections_v2;
+          const isTweetDetail =
+            responseJson.data.threaded_conversation_with_injections_v2;
           if (isTweetDetail) {
-            tweets = responseJson.data?.threaded_conversation_with_injections_v2.instructions[0].entries;
+            tweets =
+              responseJson.data?.threaded_conversation_with_injections_v2
+                .instructions[0].entries;
           } else {
-            tweets = responseJson.data?.search_by_raw_query.search_timeline.timeline?.instructions?.[0]?.entries;
+            tweets =
+              responseJson.data?.search_by_raw_query.search_timeline.timeline
+                ?.instructions?.[0]?.entries;
           }
 
           if (!tweets) {
-            console.error("No more tweets found, please check your search criteria and csv file result");
+            console.error(
+              "No more tweets found, please check your search criteria and csv file result",
+            );
             return;
           }
 
@@ -264,7 +300,8 @@ export async function crawl({
             }
           }
 
-          const headerRow = filteredFields.map((field) => `"${field}"`).join(",") + "\n";
+          const headerRow =
+            filteredFields.map((field) => `"${field}"`).join(",") + "\n";
 
           if (!headerWritten) {
             headerWritten = true;
@@ -275,12 +312,16 @@ export async function crawl({
             .map((tweet) => {
               const isPromotedTweet = tweet.entryId.includes("promoted");
 
-              if (IS_SEARCH_MODE && !tweet?.content?.itemContent?.tweet_results?.result) return null;
+              if (
+                IS_SEARCH_MODE &&
+                !tweet?.content?.itemContent?.tweet_results?.result
+              )
+                return null;
               if (IS_DETAIL_MODE) {
                 if (!tweet?.content?.items?.[0]?.item?.itemContent) return null;
                 const isMentionThreadCreator =
-                  tweet?.content?.items?.[0]?.item?.itemContent?.tweet_results?.result?.legacy?.entities
-                    ?.user_mentions?.[0];
+                  tweet?.content?.items?.[0]?.item?.itemContent?.tweet_results
+                    ?.result?.legacy?.entities?.user_mentions?.[0];
                 if (!isMentionThreadCreator) return null;
               }
               if (isPromotedTweet) return null;
@@ -289,11 +330,16 @@ export async function crawl({
                 ? tweet.content.itemContent.tweet_results.result
                 : tweet.content.items[0].item.itemContent.tweet_results.result;
 
-              if (!result.tweet?.core?.user_results && !result.core?.user_results) return null;
+              if (
+                !result.tweet?.core?.user_results &&
+                !result.core?.user_results
+              )
+                return null;
 
               const tweetContent = result.legacy || result.tweet.legacy;
               const userContent =
-                result.core?.user_results?.result?.legacy || result.tweet.core.user_results.result.legacy;
+                result.core?.user_results?.result?.legacy ||
+                result.tweet.core.user_results.result.legacy;
 
               return {
                 tweet: tweetContent,
@@ -315,31 +361,44 @@ export async function crawl({
             console.info(chalk.green(`Created new directory: ${dirFullPath}`));
           }
 
-          const rows = comingTweets.reduce((prev: [], current: (typeof tweetContents)[0]) => {
-            const tweet = pick(current.tweet, filteredFields);
+          const rows = comingTweets.reduce(
+            (prev: [], current: (typeof tweetContents)[0]) => {
+              const tweet = pick(current.tweet, filteredFields);
 
-            let cleanTweetText = `${tweet.full_text.replace(/,/g, " ").replace(/\n/g, " ")}`;
+              let cleanTweetText = `${tweet.full_text
+                .replace(/,/g, " ")
+                .replace(/\n/g, " ")}`;
 
-            if (IS_DETAIL_MODE) {
-              const firstWord = cleanTweetText.split(" ")[0];
-              const replyToUsername = current.tweet.entities.user_mentions[0].screen_name;
-              // firstWord example: "@someone", the 0 index is " and the 1 index is @
-              if (firstWord[1] === "@") {
-                // remove the first word
-                cleanTweetText = cleanTweetText.replace(`@${replyToUsername} `, "");
+              if (IS_DETAIL_MODE) {
+                const firstWord = cleanTweetText.split(" ")[0];
+                const replyToUsername =
+                  current.tweet.entities.user_mentions[0].screen_name;
+                // firstWord example: "@someone", the 0 index is " and the 1 index is @
+                if (firstWord[1] === "@") {
+                  // remove the first word
+                  cleanTweetText = cleanTweetText.replace(
+                    `@${replyToUsername} `,
+                    "",
+                  );
+                }
               }
-            }
 
-            tweet["full_text"] = cleanTweetText;
-            tweet["username"] = current.user.screen_name;
-            tweet["tweet_url"] = `https://twitter.com/${current.user.screen_name}/status/${tweet.id_str}`;
-            tweet["image_url"] = current.tweet.entities?.media?.[0]?.media_url_https || "";
-            tweet["location"] = current.user.location || "";
+              tweet["full_text"] = cleanTweetText;
+              tweet["username"] = current.user.screen_name;
+              tweet["tweet_url"] =
+                `https://twitter.com/${current.user.screen_name}/status/${tweet.id_str}`;
+              tweet["image_url"] =
+                current.tweet.entities?.media?.[0]?.media_url_https || "";
+              tweet["location"] = current.user.location || "";
 
-            const row = Object.values(convertValuesToStrings(tweet)).join(",");
+              const row = Object.values(convertValuesToStrings(tweet)).join(
+                ",",
+              );
 
-            return [...prev, row];
-          }, []);
+              return [...prev, row];
+            },
+            [],
+          );
 
           const csv = (rows as []).join("\n") + "\n";
           const fullPathFilename = appendCsv(FILE_NAME, csv);
@@ -347,14 +406,20 @@ export async function crawl({
           console.info(chalk.blue(`Your tweets saved to: ${fullPathFilename}`));
 
           // progress:
-          console.info(chalk.yellow(`Total tweets saved: ${allData.tweets.length}`));
+          console.info(
+            chalk.yellow(`Total tweets saved: ${allData.tweets.length}`),
+          );
           additionalTweetsCount += comingTweets.length;
 
           // for every multiple of 100, wait for 5 seconds
           if (additionalTweetsCount > 100) {
             additionalTweetsCount = 0;
             if (DELAY_EVERY_100_TWEETS_SECONDS) {
-              console.info(chalk.gray(`\n--Taking a break, waiting for ${DELAY_EVERY_100_TWEETS_SECONDS} seconds...`));
+              console.info(
+                chalk.gray(
+                  `\n--Taking a break, waiting for ${DELAY_EVERY_100_TWEETS_SECONDS} seconds...`,
+                ),
+              );
               await page.waitForTimeout(DELAY_EVERY_100_TWEETS_SECONDS * 1000);
             }
           } else if (additionalTweetsCount > 20) {
@@ -365,7 +430,11 @@ export async function crawl({
           console.info(chalk.gray("Scrolling more..."));
 
           if (timeoutCount > TIMEOUT_LIMIT) {
-            console.info(chalk.yellow("No more tweets found, please check your search criteria and csv file result"));
+            console.info(
+              chalk.yellow(
+                "No more tweets found, please check your search criteria and csv file result",
+              ),
+            );
             break;
           }
 
@@ -373,7 +442,7 @@ export async function crawl({
             window.scrollTo({
               behavior: "smooth",
               top: 10_000 * 9_000,
-            })
+            }),
           );
 
           await scrollAndSave(); // call the function again to resume scrolling
@@ -383,7 +452,7 @@ export async function crawl({
           window.scrollTo({
             behavior: "smooth",
             top: 10_000 * 9_000,
-          })
+          }),
         );
       }
     }
@@ -391,7 +460,9 @@ export async function crawl({
     await scrollAndSave();
 
     if (allData.tweets.length) {
-      console.info(`Already got ${allData.tweets.length} tweets, done scrolling...`);
+      console.info(
+        `Already got ${allData.tweets.length} tweets, done scrolling...`,
+      );
     } else {
       console.info("No tweets found for the search criteria");
     }
@@ -400,8 +471,13 @@ export async function crawl({
   try {
     await startCrawlTwitter();
 
-    if (TWEETS_NOT_FOUND_ON_CURRENT_TAB && (SEARCH_FROM_DATE || SEARCH_TO_DATE)) {
-      console.info(`No tweets found on "${SEARCH_TAB}" tab, trying "${SWITCHED_SEARCH_TAB}" tab...`);
+    if (
+      TWEETS_NOT_FOUND_ON_CURRENT_TAB &&
+      (SEARCH_FROM_DATE || SEARCH_TO_DATE)
+    ) {
+      console.info(
+        `No tweets found on "${SEARCH_TAB}" tab, trying "${SWITCHED_SEARCH_TAB}" tab...`,
+      );
 
       await startCrawlTwitter({
         twitterSearchUrl: TWITTER_SEARCH_ADVANCED_URL[SWITCHED_SEARCH_TAB],
@@ -410,17 +486,21 @@ export async function crawl({
   } catch (error) {
     console.error(error);
     console.info(chalk.blue(`Keywords: ${MODIFIED_SEARCH_KEYWORDS}`));
-    console.info(chalk.yellowBright("Twitter Harvest v", CURRENT_PACKAGE_VERSION));
+    console.info(
+      chalk.yellowBright("Twitter Harvest v", CURRENT_PACKAGE_VERSION),
+    );
 
-    const errorFilename = FUlL_PATH_FOLDER_DESTINATION + `/Error-${NOW}.png`.replace(/ /g, "_").replace(".csv", "");
+    const errorFilename =
+      FUlL_PATH_FOLDER_DESTINATION +
+      `/Error-${NOW}.png`.replace(/ /g, "_").replace(".csv", "");
 
     await page.screenshot({ path: path.resolve(errorFilename) }).then(() => {
       console.log(
         chalk.red(
           `\nIf you need help, please send this error screenshot to the maintainer, it was saved to "${path.resolve(
-            errorFilename
-          )}"`
-        )
+            errorFilename,
+          )}"`,
+        ),
       );
     });
   } finally {
@@ -468,12 +548,12 @@ export async function crawlReturned({
   console.info(chalk.blue("\nOpening twitter search page...\n"));
 
   let TWEETS_NOT_FOUND_ON_CURRENT_TAB = false;
-  
-  const launchOpts: LaunchOptions = { 
-    headless: HEADLESS_MODE,
-  }
 
-  if(Object.keys(proxyOpts).length > 0) {
+  const launchOpts: LaunchOptions = {
+    headless: HEADLESS_MODE,
+  };
+
+  if (Object.keys(proxyOpts).length > 0) {
     launchOpts.proxy = proxyOpts as ProxyOpts;
   }
 
@@ -540,13 +620,18 @@ export async function crawlReturned({
     };
 
     async function scrollAndSave() {
-      while (allData.tweets.length < TARGET_TWEET_COUNT && timeoutCount < TIMEOUT_LIMIT) {
+      while (
+        allData.tweets.length < TARGET_TWEET_COUNT &&
+        timeoutCount < TIMEOUT_LIMIT
+      ) {
         // Wait for the next response or 3 seconds, whichever comes first
         const response = await Promise.race([
           // includes "SearchTimeline" because it's the endpoint for the search result
           // or also includes "TweetDetail" because it's the endpoint for the tweet detail
           page.waitForResponse(
-            (response) => response.url().includes("SearchTimeline") || response.url().includes("TweetDetail")
+            (response) =>
+              response.url().includes("SearchTimeline") ||
+              response.url().includes("TweetDetail"),
           ),
           page.waitForTimeout(5000),
         ]);
@@ -562,13 +647,17 @@ export async function crawlReturned({
             responseJson = await response.json();
           } catch (error) {
             if ((await response.text()).toLowerCase().includes("rate limit")) {
-              console.error(`Error parsing response json: ${JSON.stringify(response)}`);
               console.error(
-                `Most likely, you have already exceeded the Twitter rate limit. Read more on https://twitter.com/elonmusk/status/1675187969420828672?s=46.`
+                `Error parsing response json: ${JSON.stringify(response)}`,
+              );
+              console.error(
+                `Most likely, you have already exceeded the Twitter rate limit. Read more on https://twitter.com/elonmusk/status/1675187969420828672?s=46.`,
               );
 
               // wait for rate limit window passed before retrying
-              await page.waitForTimeout(calculateForRateLimit(rateLimitCount++));
+              await page.waitForTimeout(
+                calculateForRateLimit(rateLimitCount++),
+              );
 
               // click retry
               await page.click("text=Retry");
@@ -581,15 +670,22 @@ export async function crawlReturned({
           // reset the rate limit exception count
           rateLimitCount = 0;
 
-          const isTweetDetail = responseJson.data.threaded_conversation_with_injections_v2;
+          const isTweetDetail =
+            responseJson.data.threaded_conversation_with_injections_v2;
           if (isTweetDetail) {
-            tweets = responseJson.data?.threaded_conversation_with_injections_v2.instructions[0].entries;
+            tweets =
+              responseJson.data?.threaded_conversation_with_injections_v2
+                .instructions[0].entries;
           } else {
-            tweets = responseJson.data?.search_by_raw_query.search_timeline.timeline?.instructions?.[0]?.entries;
+            tweets =
+              responseJson.data?.search_by_raw_query.search_timeline.timeline
+                ?.instructions?.[0]?.entries;
           }
 
           if (!tweets) {
-            console.error("No more tweets found, please check your search criteria and csv file result");
+            console.error(
+              "No more tweets found, please check your search criteria and csv file result",
+            );
             return;
           }
 
@@ -606,12 +702,16 @@ export async function crawlReturned({
             .map((tweet) => {
               const isPromotedTweet = tweet.entryId.includes("promoted");
 
-              if (IS_SEARCH_MODE && !tweet?.content?.itemContent?.tweet_results?.result) return null;
+              if (
+                IS_SEARCH_MODE &&
+                !tweet?.content?.itemContent?.tweet_results?.result
+              )
+                return null;
               if (IS_DETAIL_MODE) {
                 if (!tweet?.content?.items?.[0]?.item?.itemContent) return null;
                 const isMentionThreadCreator =
-                  tweet?.content?.items?.[0]?.item?.itemContent?.tweet_results?.result?.legacy?.entities
-                    ?.user_mentions?.[0];
+                  tweet?.content?.items?.[0]?.item?.itemContent?.tweet_results
+                    ?.result?.legacy?.entities?.user_mentions?.[0];
                 if (!isMentionThreadCreator) return null;
               }
               if (isPromotedTweet) return null;
@@ -620,11 +720,16 @@ export async function crawlReturned({
                 ? tweet.content.itemContent.tweet_results.result
                 : tweet.content.items[0].item.itemContent.tweet_results.result;
 
-              if (!result.tweet?.core?.user_results && !result.core?.user_results) return null;
+              if (
+                !result.tweet?.core?.user_results &&
+                !result.core?.user_results
+              )
+                return null;
 
               const tweetContent = result.legacy || result.tweet.legacy;
               const userContent =
-                result.core?.user_results?.result?.legacy || result.tweet.core.user_results.result.legacy;
+                result.core?.user_results?.result?.legacy ||
+                result.tweet.core.user_results.result.legacy;
 
               return {
                 tweet: tweetContent,
@@ -637,14 +742,20 @@ export async function crawlReturned({
           allData.tweets.push(...tweetContents);
 
           // progress:
-          console.info(chalk.yellow(`Total tweets saved: ${allData.tweets.length}`));
+          console.info(
+            chalk.yellow(`Total tweets saved: ${allData.tweets.length}`),
+          );
           additionalTweetsCount += tweetContents.length;
 
           // for every multiple of 100, wait for 5 seconds
           if (additionalTweetsCount > 100) {
             additionalTweetsCount = 0;
             if (DELAY_EVERY_100_TWEETS_SECONDS) {
-              console.info(chalk.gray(`\n--Taking a break, waiting for ${DELAY_EVERY_100_TWEETS_SECONDS} seconds...`));
+              console.info(
+                chalk.gray(
+                  `\n--Taking a break, waiting for ${DELAY_EVERY_100_TWEETS_SECONDS} seconds...`,
+                ),
+              );
               await page.waitForTimeout(DELAY_EVERY_100_TWEETS_SECONDS * 1000);
             }
           } else if (additionalTweetsCount > 20) {
@@ -655,7 +766,11 @@ export async function crawlReturned({
           console.info(chalk.gray("Scrolling more..."));
 
           if (timeoutCount > TIMEOUT_LIMIT) {
-            console.info(chalk.yellow("No more tweets found, please check your search criteria and csv file result"));
+            console.info(
+              chalk.yellow(
+                "No more tweets found, please check your search criteria and csv file result",
+              ),
+            );
             break;
           }
 
@@ -663,7 +778,7 @@ export async function crawlReturned({
             window.scrollTo({
               behavior: "smooth",
               top: 10_000 * 9_000,
-            })
+            }),
           );
 
           await scrollAndSave(); // call the function again to resume scrolling
@@ -673,7 +788,7 @@ export async function crawlReturned({
           window.scrollTo({
             behavior: "smooth",
             top: 10_000 * 9_000,
-          })
+          }),
         );
       }
     }
@@ -681,7 +796,9 @@ export async function crawlReturned({
     await scrollAndSave();
 
     if (allData.tweets.length) {
-      console.info(`Already got ${allData.tweets.length} tweets, done scrolling...`);
+      console.info(
+        `Already got ${allData.tweets.length} tweets, done scrolling...`,
+      );
     } else {
       console.info("No tweets found for the search criteria");
     }
@@ -693,8 +810,13 @@ export async function crawlReturned({
   try {
     const returned = await startCrawlTwitter();
     accumulator.push(...returned);
-    if (TWEETS_NOT_FOUND_ON_CURRENT_TAB && (SEARCH_FROM_DATE || SEARCH_TO_DATE)) {
-      console.info(`No tweets found on "${SEARCH_TAB}" tab, trying "${SWITCHED_SEARCH_TAB}" tab...`);
+    if (
+      TWEETS_NOT_FOUND_ON_CURRENT_TAB &&
+      (SEARCH_FROM_DATE || SEARCH_TO_DATE)
+    ) {
+      console.info(
+        `No tweets found on "${SEARCH_TAB}" tab, trying "${SWITCHED_SEARCH_TAB}" tab...`,
+      );
 
       const returned = await startCrawlTwitter({
         twitterSearchUrl: TWITTER_SEARCH_ADVANCED_URL[SWITCHED_SEARCH_TAB],
@@ -705,7 +827,9 @@ export async function crawlReturned({
   } catch (error) {
     console.error(error);
     console.info(chalk.blue(`Keywords: ${MODIFIED_SEARCH_KEYWORDS}`));
-    console.info(chalk.yellowBright("Twitter Harvest v", CURRENT_PACKAGE_VERSION));
+    console.info(
+      chalk.yellowBright("Twitter Harvest v", CURRENT_PACKAGE_VERSION),
+    );
   } finally {
     if (!DEBUG_MODE) {
       await browser.close();

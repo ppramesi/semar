@@ -22,7 +22,12 @@ function toYYYYMMDDHHMMSSUTC(date: Date): string {
 
 export const inputKeywords = async (
   page: Page,
-  { SEARCH_FROM_DATE, SEARCH_TO_DATE, SEARCH_KEYWORDS, MODIFIED_SEARCH_KEYWORDS }
+  {
+    SEARCH_FROM_DATE,
+    SEARCH_TO_DATE,
+    SEARCH_KEYWORDS,
+    MODIFIED_SEARCH_KEYWORDS,
+  },
 ) => {
   // wait until it shown: input[name="allOfTheseWords"]
   await page.waitForSelector('input[name="allOfTheseWords"]', {
@@ -31,7 +36,6 @@ export const inputKeywords = async (
 
   await page.click('input[name="allOfTheseWords"]');
 
-  
   if (SEARCH_FROM_DATE) {
     let searchFromDate: Date;
     if (SEARCH_FROM_DATE instanceof Date) {
@@ -39,7 +43,7 @@ export const inputKeywords = async (
     } else {
       searchFromDate = new Date(SEARCH_FROM_DATE);
     }
-    
+
     MODIFIED_SEARCH_KEYWORDS += ` since:${toYYYYMMDDHHMMSSUTC(searchFromDate)}`;
   }
 
@@ -54,7 +58,9 @@ export const inputKeywords = async (
     MODIFIED_SEARCH_KEYWORDS += ` until:${toYYYYMMDDHHMMSSUTC(searchToDate)}`;
   }
 
-  console.info(chalk.yellow(`\nFilling in keywords: ${MODIFIED_SEARCH_KEYWORDS}\n`));
+  console.info(
+    chalk.yellow(`\nFilling in keywords: ${MODIFIED_SEARCH_KEYWORDS}\n`),
+  );
 
   await page.fill('input[name="allOfTheseWords"]', MODIFIED_SEARCH_KEYWORDS);
 

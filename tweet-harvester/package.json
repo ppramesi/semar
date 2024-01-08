@@ -41,17 +41,23 @@
     "@types/pg-promise": "^5.4.3",
     "@types/prompts": "^2.4.4",
     "@types/yargs": "^17.0.24",
+    "@typescript-eslint/eslint-plugin": "^6.18.0",
+    "@typescript-eslint/parser": "^6.18.0",
+    "eslint": "^8.56.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-prettier": "^5.1.2",
     "pkg": "^5.8.1",
+    "prettier": "^3.1.1",
     "typescript": "*"
   },
   "bin": {
     "tweet-harvest": "dist/bin.js"
   },
   "scripts": {
+    "format": "prettier --write \"src\"",
     "start": "node ./dist/index.js",
     "dev": "npx tsx src/dev.ts",
     "build": "tsc",
-    "build:pkg": "pkg . --out-path ./bin",
-    "prepublish": "yarn build"
+    "build:pkg": "pkg . --out-path ./bin"
   }
 }

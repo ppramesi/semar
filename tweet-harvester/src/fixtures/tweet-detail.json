@@ -203,7 +203,9 @@
                                     "media_count": 1160,
                                     "name": "wis/kur",
                                     "normal_followers_count": 633,
-                                    "pinned_tweet_ids_str": ["1660208286766104576"],
+                                    "pinned_tweet_ids_str": [
+                                      "1660208286766104576"
+                                    ],
                                     "possibly_sensitive": false,
                                     "profile_banner_url": "https://pbs.twimg.com/profile_banners/3098915719/1689743937",
                                     "profile_image_url_https": "https://pbs.twimg.com/profile_images/1587474746589196289/Uh8zkuSY_normal.jpg",
@@ -1207,7 +1209,9 @@
                                     "media_count": 1786,
                                     "name": "WTB 2 TIX ERAS TOUR SG",
                                     "normal_followers_count": 309,
-                                    "pinned_tweet_ids_str": ["1677688705514110976"],
+                                    "pinned_tweet_ids_str": [
+                                      "1677688705514110976"
+                                    ],
                                     "possibly_sensitive": false,
                                     "profile_banner_url": "https://pbs.twimg.com/profile_banners/906882008097292288/1679832914",
                                     "profile_image_url_https": "https://pbs.twimg.com/profile_images/1643049272655622144/clfX64xT_normal.jpg",

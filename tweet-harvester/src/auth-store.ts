@@ -13,32 +13,32 @@ export class AuthStore {
   db: Database;
   currentIndex: number = 0;
   sourceLoaded: boolean = false;
-  constructor(type: AuthStoreSource){
+  constructor(type: AuthStoreSource) {
     this.type = type;
     this.authSources = [];
     this.loadSourceDeferrer = deferrer();
     this.db = dbInstance;
   }
 
-  async loadSource(){
+  async loadSource() {
     this.currentIndex = 0;
     if (this.type === "db") {
       const authTokens = await this.db.getAuthTokens();
-      this.authSources = authTokens.map(source => ({ source }));
+      this.authSources = authTokens.map((source) => ({ source }));
     } else if (this.type === "env") {
-      const authSource = process.env.AUTH_TOKENS as string;
-      this.authSources = authSource.split(",").map(source => ({ source }));
+      const authSource = process.env.TWITTER_AUTH_TOKENS as string;
+      this.authSources = authSource.split(",").map((source) => ({ source }));
     } else {
       throw new Error("Type not valid");
     }
   }
 
-  async sourceLength(){
+  async sourceLength() {
     await this.loadSourceDeferrer;
     return this.authSources.length;
   }
 
-  async rotateAuth(){
+  async rotateAuth() {
     if (!this.sourceLoaded) {
       await this.loadSource()
         .then(() => {
@@ -47,7 +47,7 @@ export class AuthStore {
         .catch(() => {
           this.loadSourceDeferrer.reject();
         });
-        
+
       this.sourceLoaded = true;
     }
 
@@ -62,7 +62,7 @@ export class AuthStore {
     return currentAuth;
   }
 
-  async getAuth(){
+  async getAuth() {
     if (!this.sourceLoaded) {
       await this.loadSource()
         .then(() => {
@@ -71,14 +71,16 @@ export class AuthStore {
         .catch(() => {
           this.loadSourceDeferrer.reject();
         });
-        
+
       this.sourceLoaded = true;
     }
-    
+
     await this.loadSourceDeferrer;
 
     return this.authSources[this.currentIndex];
   }
 }
 
-export default new AuthStore(process.env.TWITTER_AUTH_SOURCE as "db" | "env" ?? "env");
+export default new AuthStore(
+  (process.env.TWITTER_AUTH_SOURCE as "db" | "env") ?? "env",
+);

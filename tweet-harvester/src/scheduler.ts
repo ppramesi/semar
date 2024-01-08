@@ -1,15 +1,20 @@
-import { ToadScheduler, SimpleIntervalJob, SimpleIntervalSchedule, AsyncTask } from "toad-scheduler";
-import { RunManager } from "./manager";
+import {
+  ToadScheduler,
+  SimpleIntervalJob,
+  SimpleIntervalSchedule,
+  AsyncTask,
+} from "toad-scheduler";
+import { CrawlManager } from "./manager";
 import { v4 } from "uuid";
 
 export type SchedulerConfig = {
   rule: SimpleIntervalSchedule;
-  runManager: RunManager;
+  runManager: CrawlManager;
 };
 
 export function createRecurrenceRule(hours: number): SimpleIntervalSchedule {
   const schedule: SimpleIntervalSchedule = {
-    runImmediately: true
+    runImmediately: true,
   };
   const wholeHours = Math.floor(hours);
   const minutes = Math.floor((hours - Math.floor(hours)) * 60);
@@ -24,7 +29,7 @@ export function createRecurrenceRule(hours: number): SimpleIntervalSchedule {
   if (seconds > 0) {
     schedule.seconds = seconds;
   }
-  
+
   return schedule;
 }
 
@@ -32,10 +37,10 @@ export class Scheduler {
   paused: boolean;
   job: SimpleIntervalJob;
   rule: SimpleIntervalSchedule;
-  manager: RunManager;
+  manager: CrawlManager;
   scheduler: ToadScheduler;
   ids: string[] = [];
-  constructor(config: SchedulerConfig){
+  constructor(config: SchedulerConfig) {
     this.rule = config.rule;
     this.manager = config.runManager;
     this.paused = false;
@@ -46,7 +51,7 @@ export class Scheduler {
     const id = v4();
     this.ids.push(id);
     const task = new AsyncTask(
-      id, 
+      id,
       async () => {
         if (!this.paused) {
           return this.manager.run();
@@ -55,8 +60,8 @@ export class Scheduler {
       (err: Error) => {
         console.error(err);
         throw err;
-      }
-    )
+      },
+    );
     this.job = new SimpleIntervalJob(this.rule, task);
     this.scheduler.addSimpleIntervalJob(this.job);
   }

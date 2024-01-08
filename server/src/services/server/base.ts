@@ -10,6 +10,9 @@ import { PGFilter } from "../../lc/vectorstores/pg.js";
 import { TweetAggregator } from "../../lc/chains/aggregator.js";
 import { v4 } from "uuid";
 import { DuplicateChecker } from "../../lc/chains/duplicate_checker.js";
+import harvesterCallerInstance, {
+  HarvesterCaller,
+} from "../harvester_caller.js";
 
 export type SemarServerOpts = {
   db: SemarPostgres;
@@ -26,6 +29,7 @@ export abstract class SemarServer {
   aggregator: TweetAggregator;
   relevancyEvaluator: TweetRelevancyEvaluator;
   dupeChecker: DuplicateChecker;
+  harvesterCaller: HarvesterCaller = harvesterCallerInstance;
   constructor(opts: SemarServerOpts) {
     this.db = opts.db;
     this.llm = opts.llm;
@@ -96,9 +100,26 @@ export abstract class SemarServer {
     return embeddings;
   }
 
-  async fetchRelevantTweets(tweetOrId: string, k: number): Promise<Tweet[]>;
-  async fetchRelevantTweets(tweetOrId: Tweet, k: number): Promise<Tweet[]>;
-  async fetchRelevantTweets(
+  async fetchRelevantTweetsFromSearch(keywords: string[]): Promise<Tweet[]> {
+    const sevenDaysAgo = new Date(
+      new Date().getTime() - 7 * 24 * 60 * 60 * 1000,
+    );
+    return this.harvesterCaller.searchRelevantTweets(
+      `("${keywords.join(`" OR "`)}") min_faves:100`,
+      sevenDaysAgo,
+      new Date(),
+    );
+  }
+
+  async fetchRelevantTweetsFromVectorStore(
+    tweetOrId: string,
+    k: number,
+  ): Promise<Tweet[]>;
+  async fetchRelevantTweetsFromVectorStore(
+    tweetOrId: Tweet,
+    k: number,
+  ): Promise<Tweet[]>;
+  async fetchRelevantTweetsFromVectorStore(
     tweetOrId: Tweet | string,
     k: number,
   ): Promise<Tweet[]> {
@@ -189,14 +210,6 @@ export abstract class SemarServer {
     };
   }
 
-  // async checkDuplicates(tweet: Tweet): Promise<boolean> {
-  //   return false;
-  // }
-
-  // async generateSummary(tweets: Tweet[]): Summary {
-  //   const procTweets = TweetSummarizer.processTweets(tweets);
-  // }
-
   async saveTweet(tweet: Tweet): Promise<void> {
     await this.db.insertTweet(tweet);
   }
@@ -261,11 +274,15 @@ export abstract class SemarServer {
               tweets[i].embedding = embeddings[i];
               tweets[i].tags = tags[i];
             }
-            const [relevantTweets] = await Promise.all([
-              this.fetchRelevantTweets(tweets[0], 5),
+            const [vsRelevantTweets, twRelevantTweets] = await Promise.all([
+              this.fetchRelevantTweetsFromVectorStore(tweets[0], 5),
+              this.fetchRelevantTweetsFromSearch(tags[0]),
               this.saveTweets(tweets),
             ]);
-            const summary = await this.summarizeTweets(tweets, relevantTweets);
+            const summary = await this.summarizeTweets(tweets, [
+              ...vsRelevantTweets,
+              ...twRelevantTweets,
+            ]);
 
             return summary;
           } else {

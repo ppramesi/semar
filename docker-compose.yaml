@@ -60,6 +60,8 @@ services:
     env_file: 
       - ./server/.env
     environment:
+      HARVESTER_URL: http://tweet-harvester
+      HARVESTER_PORT: ${HARVESTER_PORT}
       POSTGRES_HOST: db
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}

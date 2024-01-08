@@ -189,6 +189,6 @@ export interface RootObject {
 }
 
 export type TweetMappedReturn = {
-  tweet: TweetContent["legacy"],
-  user: User["legacy"]
-}
+  tweet: TweetContent["legacy"];
+  user: User["legacy"];
+};
