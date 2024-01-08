@@ -69,5 +69,31 @@ services:
       POSTGRES_PORT: ${POSTGRES_PORT}
       AUTH_TOKEN: ${AUTH_TOKEN}
 
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    volumes:
+      - ./frontend:/app/src
+    ports:
+      - "${NITRO_PORT}:${NITRO_PORT}"
+    depends_on:
+      - db
+      - tweet-harvester
+      - server
+    env_file: 
+      - ./frontend/.env
+    args:
+      - NITRO_PORT=${NITRO_PORT}
+    environment:
+      NITRO_PORT: ${NITRO_PORT}
+      NITRO_HOST: ${NITRO_HOST}
+      AUTH_TOKEN: ${AUTH_TOKEN}
+      POSTGRES_HOST: db
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_PORT: ${POSTGRES_PORT}
+
 volumes:
   db-data:
