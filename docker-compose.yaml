@@ -73,6 +73,8 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        - NITRO_PORT=${NITRO_PORT}
     volumes:
       - ./frontend:/app/src
     ports:
@@ -83,17 +85,15 @@ services:
       - server
     env_file: 
       - ./frontend/.env
-    args:
-      - NITRO_PORT=${NITRO_PORT}
     environment:
       NITRO_PORT: ${NITRO_PORT}
       NITRO_HOST: ${NITRO_HOST}
       AUTH_TOKEN: ${AUTH_TOKEN}
-      POSTGRES_HOST: db
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_PORT: ${POSTGRES_PORT}
+      POSTGRES_HOST: db
 
 volumes:
   db-data:

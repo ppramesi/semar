@@ -1,4 +1,4 @@
-FROM node:18.14.2
+FROM node:18.14.2 as base
 
 ARG NITRO_PORT
 
@@ -9,10 +9,8 @@ WORKDIR /src
 # Build
 FROM base as build
 
-COPY --link package.json package-lock.json ./
+COPY . .
 RUN npm install --production=false
-
-COPY --link . .
 
 RUN npm run build
 RUN npm prune
@@ -23,6 +21,8 @@ FROM base
 ENV NITRO_PORT=$NITRO_PORT
 
 COPY --from=build /src/.output /src/.output
+COPY --from=build /src/.nuxt /src/.nuxt
+COPY --from=build /src/package.json /src/package.json
 
 EXPOSE $NITRO_PORT
 

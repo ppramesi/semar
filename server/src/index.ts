@@ -11,7 +11,7 @@ const pgp = pgPromise();
 
 async function connectWithRetry(
   maxRetries: number = 5,
-  delayMillis: number = 2000,
+  delayMillis: number = 5000,
 ) {
   let retries = maxRetries;
 
