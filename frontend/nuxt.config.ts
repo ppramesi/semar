@@ -2,6 +2,13 @@
 export default defineNuxtConfig({
   devtools: { enabled: true },
   css: ['~/assets/css/main.css'],
+  runtimeConfig: {
+    postgresUser: '',
+    postgresPassword: '',
+    postgresDb: '',
+    postgresPort: '',
+    postgresHost: ''
+  },
   postcss: {
     plugins: {
       tailwindcss: {},
