@@ -1,30 +1,34 @@
 import express, { Express, Request, Response } from "express";
 import { CrawlManager } from "./manager"; // Assuming CrawlManager is in a separate file
-import { Scheduler } from "./scheduler";
 import _ from "lodash";
+// import { Scheduler } from "./scheduler";
 
 export type ServerOpts = {
   crawlManager: CrawlManager;
-  scheduler: Scheduler;
+  // scheduler: Scheduler;
 };
 
 export class Server {
   private app: Express;
   private crawlManager: CrawlManager;
-  private scheduler: Scheduler;
-  private started: boolean = false;
+  // private scheduler: Scheduler;
+  // private started: boolean = false;
 
   constructor(serverOpts: ServerOpts) {
     this.app = express();
     this.app.use(express.json());
     this.crawlManager = serverOpts.crawlManager;
-    this.scheduler = serverOpts.scheduler;
+    // this.scheduler = serverOpts.scheduler;
     this.setupRoutes();
   }
 
   private authMiddleware(req: Request, res: Response, next: () => void): void {
     const authToken = req.header("auth-token");
-    if (!_.isNil(process.env.AUTH_TOKEN) && process.env.AUTH_TOKEN.length > 0 && process.env.AUTH_TOKEN !== authToken) {
+    if (
+      !_.isNil(process.env.AUTH_TOKEN) &&
+      process.env.AUTH_TOKEN.length > 0 &&
+      process.env.AUTH_TOKEN !== authToken
+    ) {
       res.status(403).json({ status: "unauthorized" });
       return;
     }
@@ -36,12 +40,25 @@ export class Server {
     this.app.use(this.authMiddleware.bind(this));
     this.app.post(
       "/search-relevant-tweets",
-      this.handleSearchTweets.bind(this)
+      this.handleSearchTweets.bind(this),
     );
-    this.app.post("/start", this.handleStart.bind(this));
-    this.app.post("/pause", this.handlePause.bind(this));
-    this.app.post("/unpause", this.handleUnpause.bind(this));
-    this.app.post("/kill", this.handleKill.bind(this));
+    this.app.post("/scrape-tweets", this.handleScrapeTweets.bind(this));
+    // this.app.post("/start", this.handleStart.bind(this));
+    // this.app.post("/pause", this.handlePause.bind(this));
+    // this.app.post("/unpause", this.handleUnpause.bind(this));
+    // this.app.post("/kill", this.handleKill.bind(this));
+  }
+
+  private async handleScrapeTweets(
+    _req: Request,
+    res: Response,
+  ): Promise<void> {
+    try {
+      const data = await this.crawlManager.run();
+      res.status(200).json({ status: "success", data });
+    } catch (error) {
+      res.status(400).json({ status: "error", error: error.message });
+    }
   }
 
   private async handleSearchTweets(req: Request, res: Response): Promise<void> {
@@ -52,7 +69,7 @@ export class Server {
         new Date(fromDate),
         new Date(toDate),
         5,
-        "TOP"
+        "TOP",
       );
       res.status(200).json({ status: "success", data });
       return;
@@ -62,35 +79,31 @@ export class Server {
     }
   }
 
-  private async handleStart(_req: Request, res: Response): Promise<void> {
-    if (!this.started) {
-      await this.scheduler.startJob();
-      this.started = true;
-      res.status(200).json({ status: "started" });
-      return;
-    } else {
-      res.status(200).json({ status: "already-started" });
-      return;
-    }
-  }
+  // private async handleStart(_req: Request, res: Response): Promise<void> {
+  //   if (!this.started) {
+  //     await this.scheduler.startJob();
+  //     this.started = true;
+  //     res.status(200).json({ status: "started" });
+  //   } else {
+  //     res.status(200).json({ status: "already-started" });
+  //   }
+  // }
 
-  private handlePause(_req: Request, res: Response): void {
-    this.scheduler.pause();
-    res.status(200).json({ status: "paused" });
-    return;
-  }
+  // private handlePause(_req: Request, res: Response): void {
+  //   this.scheduler.pause();
+  //   res.status(200).json({ status: "paused" });
+  // }
 
-  private handleUnpause(_req: Request, res: Response): void {
-    this.scheduler.unpause();
-    res.status(200).json({ status: "unpaused" });
-    return;
-  }
+  // private handleUnpause(_req: Request, res: Response): void {
+  //   this.scheduler.unpause();
+  //   res.status(200).json({ status: "unpaused" });
+  // }
 
-  private handleKill(_req: Request, res: Response): void {
-    this.scheduler.endScheduler();
-    res.status(200).json({ status: "terminated" });
-    process.exit(0);
-  }
+  // private handleKill(_req: Request, res: Response): void {
+  //   this.scheduler.endScheduler();
+  //   res.status(200).json({ status: "terminated" });
+  //   process.exit(0);
+  // }
 
   public listen(port: number | string): void {
     this.app.listen(port, () => {

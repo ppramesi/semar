@@ -4,7 +4,8 @@
   "workspaces": [
     "frontend",
     "server",
-    "tweet-harvester"
+    "tweet-harvester",
+    "scheduler"
   ],
   "description": "news aggregator",
   "main": "index.js",

@@ -1,11 +1,11 @@
-import axios from "axios";
+import axios, { AxiosRequestConfig } from "axios";
 import _ from "lodash";
 import { Tweet } from "../types/tweet.js";
 import dotenv from "dotenv";
 
 dotenv.config();
 
-export class HarvesterCaller {
+export class Caller {
   harvesterUrl: URL;
   constructor() {
     if (_.isNil(process.env.HARVESTER_URL)) {
@@ -18,21 +18,28 @@ export class HarvesterCaller {
   async searchRelevantTweets(keywords: string, fromDate: Date, toDate: Date) {
     this.harvesterUrl.pathname = "/search-relevant-tweets";
     try {
-      const { data }: { data: { data: Tweet[] }} = await axios.post(
+      const postCfg: AxiosRequestConfig = {};
+  
+      if (
+        !_.isNil(process.env.AUTH_TOKEN) &&
+        (process.env.AUTH_TOKEN as string).length > 0
+      ) {
+        postCfg.headers = {
+          "auth-token": process.env.AUTH_TOKEN,
+        };
+      }
+
+      const { data }: { data: Tweet[] } = await axios.post(
         this.harvesterUrl.toString(),
         {
           searchTerms: keywords,
           fromDate: fromDate.toISOString(),
           toDate: toDate.toISOString(),
         },
-        {
-          headers: {
-            "auth-token": process.env.AUTH_TOKEN
-          }
-        }
+        postCfg,
       );
-      
-      return data.data;
+
+      return data;
     } catch (error) {
       console.error(error);
       throw error;
@@ -40,4 +47,4 @@ export class HarvesterCaller {
   }
 }
 
-export default new HarvesterCaller();
+export default new Caller();

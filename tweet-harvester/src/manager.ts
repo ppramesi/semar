@@ -144,7 +144,7 @@ export class CrawlManager {
       };
     }
 
-    await axios.post(
+    return axios.post(
       buildProcessTweetsUrl(this.processorUrl),
       {
         tweets,
