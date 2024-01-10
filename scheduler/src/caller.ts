@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios, { AxiosRequestConfig } from "axios";
 import _ from "lodash";
 
 export class Caller {
@@ -12,9 +12,9 @@ export class Caller {
     if (_.isNil(process.env.HARVESTER_PORT)) {
       throw new Error("HARVESTER_PORT not set");
     }
-    const rawHarvesterUrl = new URL(process.env.HARVESTER_URL);
-    rawHarvesterUrl.port = process.env.HARVESTER_PORT;
-    this.harvesterUrl = rawHarvesterUrl;
+    const harvesterUrl = new URL(process.env.HARVESTER_URL);
+    harvesterUrl.port = process.env.HARVESTER_PORT;
+    this.harvesterUrl = harvesterUrl;
 
     if (_.isNil(process.env.TWEET_PROCESSOR_URL)) {
       throw new Error("TWEET_PROCESSOR_URL not set");
@@ -22,21 +22,29 @@ export class Caller {
     if (_.isNil(process.env.TWEET_PROCESSOR_PORT)) {
       throw new Error("TWEET_PROCESSOR_PORT not set");
     }
-    const rawTweetProcessorUrl = new URL(process.env.TWEET_PROCESSOR_URL);
-    rawTweetProcessorUrl.port = process.env.TWEET_PROCESSOR_PORT;
-    this.tweetProcessorUrl = rawTweetProcessorUrl;
+    const tweetProcessorUrl = new URL(process.env.TWEET_PROCESSOR_URL);
+    tweetProcessorUrl.port = process.env.TWEET_PROCESSOR_PORT;
+    this.tweetProcessorUrl = tweetProcessorUrl;
   }
 
   async callScrapeTweets(): Promise<void> {
     this.harvesterUrl.pathname = "/scrape-tweets";
+
+    const postCfg: AxiosRequestConfig = {};
+
+    if (
+      !_.isNil(process.env.AUTH_TOKEN) &&
+      (process.env.AUTH_TOKEN as string).length > 0
+    ) {
+      postCfg.headers = {
+        "auth-token": process.env.AUTH_TOKEN,
+      };
+    }
+
     await axios.post(
       this.harvesterUrl.toString(),
       {},
-      {
-        headers: {
-          "auth-token": process.env.AUTH_TOKEN,
-        },
-      },
+      postCfg,
     );
   }
 }

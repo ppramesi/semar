@@ -10,7 +10,7 @@ const main = async () => {
   const server = new Server({
     scheduler,
   });
-  await server.listen(process.env.SCHEDULER_PORT ?? 80085);
+  await server.listen(process.env.SCHEDULER_PORT ?? 1111);
 };
 
 main().catch((err) => {

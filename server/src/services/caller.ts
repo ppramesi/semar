@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios, { AxiosRequestConfig } from "axios";
 import _ from "lodash";
 import { Tweet } from "../types/tweet.js";
 
@@ -15,6 +15,17 @@ export class Caller {
   async searchRelevantTweets(keywords: string, fromDate: Date, toDate: Date) {
     this.harvesterUrl.pathname = "/search-relevant-tweets";
     try {
+      const postCfg: AxiosRequestConfig = {};
+  
+      if (
+        !_.isNil(process.env.AUTH_TOKEN) &&
+        (process.env.AUTH_TOKEN as string).length > 0
+      ) {
+        postCfg.headers = {
+          "auth-token": process.env.AUTH_TOKEN,
+        };
+      }
+
       const { data }: { data: Tweet[] } = await axios.post(
         this.harvesterUrl.toString(),
         {
@@ -22,11 +33,7 @@ export class Caller {
           fromDate: fromDate.toISOString(),
           toDate: toDate.toISOString(),
         },
-        {
-          headers: {
-            "auth-token": process.env.AUTH_TOKEN,
-          },
-        },
+        postCfg,
       );
 
       return data;
