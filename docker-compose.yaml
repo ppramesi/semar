@@ -38,7 +38,8 @@ services:
     env_file: 
       - ./tweet-harvester/.env
     environment:
-      TWEET_PROCESSOR_URL: http://server:${SERVER_PORT}
+      TWEET_PROCESSOR_URL: http://server
+      TWEET_PROCESSOR_PORT: ${TWEET_PROCESSOR_PORT}
       POSTGRES_HOST: db
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -53,7 +54,7 @@ services:
     volumes:
       - ./server:/app/src
     ports:
-      - "${SERVER_PORT}:${SERVER_PORT}"
+      - "${TWEET_PROCESSOR_PORT}:${TWEET_PROCESSOR_PORT}"
     depends_on:
       - db
       - pgadmin
@@ -88,6 +89,30 @@ services:
     environment:
       NITRO_PORT: ${NITRO_PORT}
       NITRO_HOST: ${NITRO_HOST}
+      AUTH_TOKEN: ${AUTH_TOKEN}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_PORT: ${POSTGRES_PORT}
+      POSTGRES_HOST: db
+  
+  scheduler:
+    build:
+      context: ./scheduler
+      dockerfile: Dockerfile
+    volumes:
+      - ./scheduler:/app/src
+    ports:
+      - "${SCHEDULER_PORT}:${SCHEDULER_PORT}"
+    depends_on:
+      - db
+      - tweet-harvester
+      - server
+    env_file: 
+      - ./scheduler/.env
+    environment:
+      SCHEDULER_PORT: ${SCHEDULER_PORT}
+      SCHEDULER_HOST: ${SCHEDULER_HOST}
       AUTH_TOKEN: ${AUTH_TOKEN}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}

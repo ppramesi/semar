@@ -2,7 +2,7 @@ import axios from "axios";
 import _ from "lodash";
 import { Tweet } from "../types/tweet.js";
 
-export class HarvesterCaller {
+export class Caller {
   harvesterUrl: URL;
   constructor() {
     if (_.isNil(process.env.HARVESTER_URL)) {
@@ -22,8 +22,13 @@ export class HarvesterCaller {
           fromDate: fromDate.toISOString(),
           toDate: toDate.toISOString(),
         },
+        {
+          headers: {
+            "auth-token": process.env.AUTH_TOKEN,
+          },
+        },
       );
-  
+
       return data;
     } catch (error) {
       console.error(error);
@@ -32,4 +37,4 @@ export class HarvesterCaller {
   }
 }
 
-export default new HarvesterCaller();
+export default new Caller();

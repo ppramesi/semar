@@ -10,9 +10,7 @@ import { PGFilter } from "../../lc/vectorstores/pg.js";
 import { TweetAggregator } from "../../lc/chains/aggregator.js";
 import { v4 } from "uuid";
 import { DuplicateChecker } from "../../lc/chains/duplicate_checker.js";
-import harvesterCallerInstance, {
-  HarvesterCaller,
-} from "../harvester_caller.js";
+import callerInstance, { Caller } from "../caller.js";
 
 export type SemarServerOpts = {
   db: SemarPostgres;
@@ -29,7 +27,7 @@ export abstract class SemarServer {
   aggregator: TweetAggregator;
   relevancyEvaluator: TweetRelevancyEvaluator;
   dupeChecker: DuplicateChecker;
-  harvesterCaller: HarvesterCaller = harvesterCallerInstance;
+  harvesterCaller: Caller = callerInstance;
   constructor(opts: SemarServerOpts) {
     this.db = opts.db;
     this.llm = opts.llm;
