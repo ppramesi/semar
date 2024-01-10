@@ -102,10 +102,10 @@ export abstract class SemarServer {
 
   async fetchRelevantTweetsFromSearch(keywords: string[]): Promise<Tweet[]> {
     const sevenDaysAgo = new Date(
-      new Date().getTime() - 7 * 24 * 60 * 60 * 1000,
+      new Date().getTime() - 14 * 24 * 60 * 60 * 1000,
     );
     return this.harvesterCaller.searchRelevantTweets(
-      `("${keywords.join(`" OR "`)}") min_faves:100`,
+      `("${keywords.join(`" AND "`)}") min_faves:5`,
       sevenDaysAgo,
       new Date(),
     );
@@ -264,33 +264,40 @@ export abstract class SemarServer {
         }
       }),
     );
-
-    const processed = (
-      await Promise.all(
-        tagsEmbeddings.map(async (tagged) => {
-          if (!_.isNil(tagged)) {
-            const [tweets, tags, embeddings] = tagged;
-            for (let i = 0; i < tweets.length; i++) {
-              tweets[i].embedding = embeddings[i];
-              tweets[i].tags = tags[i];
+    let processed: Summary[];
+    try {
+      processed = (
+        await Promise.all(
+          tagsEmbeddings.map(async (tagged) => {
+            if (!_.isNil(tagged)) {
+              const [tweets, tags, embeddings] = tagged;
+              for (let i = 0; i < tweets.length; i++) {
+                tweets[i].embedding = embeddings[i];
+                tweets[i].tags = tags[i];
+              }
+              const [vsRelevantTweets, twRelevantTweets] = await Promise.all([
+                this.fetchRelevantTweetsFromVectorStore(tweets[0], 5),
+                this.fetchRelevantTweetsFromSearch(tags[0]),
+                this.saveTweets(tweets),
+              ]);
+              console.log({ vsRelevantTweets, twRelevantTweets });
+              const summary = await this.summarizeTweets(tweets, [
+                ...vsRelevantTweets,
+                ...twRelevantTweets,
+              ]);
+  
+              return summary;
+            } else {
+              return null;
             }
-            const [vsRelevantTweets, twRelevantTweets] = await Promise.all([
-              this.fetchRelevantTweetsFromVectorStore(tweets[0], 5),
-              this.fetchRelevantTweetsFromSearch(tags[0]),
-              this.saveTweets(tweets),
-            ]);
-            const summary = await this.summarizeTweets(tweets, [
-              ...vsRelevantTweets,
-              ...twRelevantTweets,
-            ]);
+          }),
+        ).catch(err => { throw err })
+      ).filter((v) => !_.isNil(v)) as Summary[];  
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
 
-            return summary;
-          } else {
-            return null;
-          }
-        }),
-      )
-    ).filter((v) => !_.isNil(v)) as Summary[];
 
     if (processed.length > 0) {
       await this.db.insertSummaries(processed);

@@ -1,6 +1,7 @@
 import express, { Express, Request, Response } from "express";
 import { CrawlManager } from "./manager"; // Assuming CrawlManager is in a separate file
 import { Scheduler } from "./scheduler";
+import _ from "lodash";
 
 export type ServerOpts = {
   crawlManager: CrawlManager;
@@ -23,7 +24,7 @@ export class Server {
 
   private authMiddleware(req: Request, res: Response, next: () => void): void {
     const authToken = req.header("auth-token");
-    if (!process.env.AUTH_TOKEN || process.env.AUTH_TOKEN !== authToken) {
+    if (!_.isNil(process.env.AUTH_TOKEN) && process.env.AUTH_TOKEN.length > 0 && process.env.AUTH_TOKEN !== authToken) {
       res.status(403).json({ status: "unauthorized" });
       return;
     }
@@ -54,8 +55,10 @@ export class Server {
         "TOP"
       );
       res.status(200).json({ status: "success", data });
+      return;
     } catch (error) {
       res.status(400).json({ status: "error", error: error.message });
+      return;
     }
   }
 
@@ -64,19 +67,23 @@ export class Server {
       await this.scheduler.startJob();
       this.started = true;
       res.status(200).json({ status: "started" });
+      return;
     } else {
       res.status(200).json({ status: "already-started" });
+      return;
     }
   }
 
   private handlePause(_req: Request, res: Response): void {
     this.scheduler.pause();
     res.status(200).json({ status: "paused" });
+    return;
   }
 
   private handleUnpause(_req: Request, res: Response): void {
     this.scheduler.unpause();
     res.status(200).json({ status: "unpaused" });
+    return;
   }
 
   private handleKill(_req: Request, res: Response): void {
