@@ -283,19 +283,20 @@ export abstract class SemarServer {
                 ...vsRelevantTweets,
                 ...twRelevantTweets,
               ]);
-  
+
               return summary;
             } else {
               return null;
             }
           }),
-        ).catch(err => { throw err })
-      ).filter((v) => !_.isNil(v)) as Summary[];  
+        ).catch((err) => {
+          throw err;
+        })
+      ).filter((v) => !_.isNil(v)) as Summary[];
     } catch (error) {
       console.error(error);
       throw error;
     }
-
 
     if (processed.length > 0) {
       await this.db.insertSummaries(processed);

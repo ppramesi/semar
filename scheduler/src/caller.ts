@@ -41,11 +41,7 @@ export class Caller {
       };
     }
 
-    await axios.post(
-      this.harvesterUrl.toString(),
-      {},
-      postCfg,
-    );
+    await axios.post(this.harvesterUrl.toString(), {}, postCfg);
   }
 }
 
