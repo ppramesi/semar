@@ -16,14 +16,14 @@ export class Caller {
     harvesterUrl.port = process.env.HARVESTER_PORT;
     this.harvesterUrl = harvesterUrl;
 
-    if (_.isNil(process.env.TWEET_PROCESSOR_URL)) {
-      throw new Error("TWEET_PROCESSOR_URL not set");
+    if (_.isNil(process.env.PROCESSOR_URL)) {
+      throw new Error("PROCESSOR_URL not set");
     }
-    if (_.isNil(process.env.TWEET_PROCESSOR_PORT)) {
-      throw new Error("TWEET_PROCESSOR_PORT not set");
+    if (_.isNil(process.env.PROCESSOR_PORT)) {
+      throw new Error("PROCESSOR_PORT not set");
     }
-    const tweetProcessorUrl = new URL(process.env.TWEET_PROCESSOR_URL);
-    tweetProcessorUrl.port = process.env.TWEET_PROCESSOR_PORT;
+    const tweetProcessorUrl = new URL(process.env.PROCESSOR_URL);
+    tweetProcessorUrl.port = process.env.PROCESSOR_PORT;
     this.tweetProcessorUrl = tweetProcessorUrl;
   }
 

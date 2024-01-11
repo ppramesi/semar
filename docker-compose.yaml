@@ -24,42 +24,44 @@ services:
     ports:
       - "${PGADMIN_PORT}:${PGADMIN_PORT}"
 
-  tweet-harvester:
+  harvester:
     build:
-      context: ./tweet-harvester
+      context: ./harvester
       dockerfile: Dockerfile
     volumes:
-      - ./tweet-harvester:/app/src
+      - ./harvester:/app/src
     ports:
       - "${HARVESTER_PORT}:${HARVESTER_PORT}"
     depends_on:
       - db
     env_file: 
-      - ./tweet-harvester/.env
+      - ./harvester/.env
     environment:
-      TWEET_PROCESSOR_URL: http://server
-      TWEET_PROCESSOR_PORT: ${TWEET_PROCESSOR_PORT}
+      PROCESSOR_URL: http://processor
+      PROCESSOR_PORT: ${PROCESSOR_PORT}
       POSTGRES_HOST: db
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_PORT: ${POSTGRES_PORT}
       AUTH_TOKEN: ${AUTH_TOKEN}
+      IMAGE_RECOGNITION_PORT: ${IMAGE_RECOGNITION_PORT}
+      IMAGE_RECOGNITION_URL: http://image-recognition
   
-  server:
+  processor:
     build:
-      context: ./server
+      context: ./processor
       dockerfile: Dockerfile
     volumes:
-      - ./server:/app/src
+      - ./processor:/app/src
     ports:
-      - "${TWEET_PROCESSOR_PORT}:${TWEET_PROCESSOR_PORT}"
+      - "${PROCESSOR_PORT}:${PROCESSOR_PORT}"
     depends_on:
       - db
     env_file: 
-      - ./server/.env
+      - ./processor/.env
     environment:
-      HARVESTER_URL: http://tweet-harvester
+      HARVESTER_URL: http://harvester
       HARVESTER_PORT: ${HARVESTER_PORT}
       POSTGRES_HOST: db
       POSTGRES_USER: ${POSTGRES_USER}
@@ -112,10 +114,23 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_PORT: ${POSTGRES_PORT}
       POSTGRES_HOST: db
-      HARVESTER_URL: http://tweet-harvester
+      HARVESTER_URL: http://harvester
       HARVESTER_PORT: ${HARVESTER_PORT}
-      TWEET_PROCESSOR_URL: http://server
-      TWEET_PROCESSOR_PORT: ${TWEET_PROCESSOR_PORT}
+      PROCESSOR_URL: http://processor
+      PROCESSOR_PORT: ${PROCESSOR_PORT}
+  
+  image-recognition:
+    build:
+      context: ./image-recognition
+      dockerfile: Dockerfile
+    volumes:
+      - ./image-recognition:/app/src
+    ports:
+      - "${IMAGE_RECOGNITION_PORT}:${IMAGE_RECOGNITION_PORT}"
+    depends_on:
+      - db
+    env_file: 
+      - ./image-recognition/.env
 
 volumes:
   db-data:

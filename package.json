@@ -3,9 +3,10 @@
   "version": "0.0.1",
   "workspaces": [
     "frontend",
-    "server",
-    "tweet-harvester",
-    "scheduler"
+    "processor",
+    "harvester",
+    "scheduler",
+    "image-recognition"
   ],
   "description": "news aggregator",
   "main": "index.js",
