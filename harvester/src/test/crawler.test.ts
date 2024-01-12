@@ -8,14 +8,14 @@ test("Test", async () => {
   const period = 1;
   const processorUrl = new URL(process.env.PROCESSOR_URL);
   processorUrl.port = process.env.PROCESSOR_PORT ?? "";
-  const ocrUrl = new URL(process.env.OCR_URL);
-  ocrUrl.port = process.env.OCR_PORT ?? "";
+  const ocrUrl = new URL(process.env.IMAGE_RECOGNITION_URL);
+  ocrUrl.port = process.env.IMAGE_RECOGNITION_PORT ?? "";
   const crawlManager = new CrawlManager({
     accountsSource: process.env.TWITTER_ACCOUNTS_SOURCE as "env" | "db",
     period,
     tweetCount: 20,
     processorUrl: processorUrl.toString(),
-    ocrUrl: ocrUrl.toString(),
+    imageRecognitionUrl: ocrUrl.toString(),
   });
 
   const sevenDaysAgo = new Date(new Date().getTime() - 3 * 24 * 60 * 60 * 1000);

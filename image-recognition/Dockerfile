@@ -3,22 +3,22 @@ FROM node:18 as builder
 WORKDIR /app
 
 # Copy package.json and package-lock.json (if available)
-COPY package.json ./
-
-# Install dependencies
-RUN npm install
-
-# Copy the rest of your application's source code
 COPY . .
+
+# Install all dependencies
+RUN npm install
 
 # Download the model
 RUN node -e "import('@xenova/transformers').then(t => t.pipeline('image-to-text', 'Xenova/vit-gpt2-image-captioning')).then(() => process.exit(0))"
 
-# Copy the model to a specific directory (change 'model-name' to the correct model directory name)
+# Copy the model to a specific directory
 RUN cp -r node_modules/@xenova/transformers/.cache/Xenova/vit-gpt2-image-captioning /model-cache
 
-# Build your application (if needed)
+# Build your application
 RUN npm run build
+
+# Remove dev dependencies
+RUN npm prune --production
 
 # Production image
 FROM node:18-alpine

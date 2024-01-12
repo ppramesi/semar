@@ -6,12 +6,23 @@ import authStoreInstance, { AuthStore } from "./auth-store";
 import { TweetMappedReturn } from "./types/tweets.types";
 import _ from "lodash";
 
+export type TweetCrawlerOutput = {
+  id: string;
+  text: string;
+  date: string;
+  url: string;
+  media?: {
+    url: string;
+    text: string[];
+  }[];
+};
+
 export type CrawlManagerConfig = {
   accountsSource: "env" | "db";
   period: number;
   tweetCount: number;
   processorUrl: string;
-  ocrUrl: string;
+  imageRecognitionUrl: string;
 };
 
 function hashToUUID(inputString: string): string {
@@ -47,6 +58,12 @@ function buildOcrUrl(baseUrl: string) {
   return url.toString();
 }
 
+function buildCaptioningUrl(baseUrl: string) {
+  const url = new URL(baseUrl);
+  url.pathname = "/caption";
+  return url.toString();
+}
+
 export class CrawlManager {
   authStore: AuthStore = authStoreInstance;
   accountsSource: "env" | "db";
@@ -54,14 +71,14 @@ export class CrawlManager {
   period: number;
   tweetCount: number;
   processorUrl: string;
-  ocrUrl: string;
+  imageRecognitionUrl: string;
   constructor(config: CrawlManagerConfig) {
     this.accountsSource = config.accountsSource;
     this.db = dbInstance;
     this.period = config.period;
     this.tweetCount = config.tweetCount;
     this.processorUrl = config.processorUrl;
-    this.ocrUrl = config.ocrUrl;
+    this.imageRecognitionUrl = config.imageRecognitionUrl;
   }
 
   async fetchAccounts() {
@@ -94,7 +111,8 @@ export class CrawlManager {
     toDate: Date,
     tweetCount?: number,
     tab: "LATEST" | "TOP" = "LATEST",
-  ) {
+    processImage: boolean = false,
+  ): Promise<TweetCrawlerOutput[]> {
     let accessToken = await this.authStore.getAuth();
     let data: TweetMappedReturn[];
     while (_.isNil(data)) {
@@ -116,55 +134,76 @@ export class CrawlManager {
       }
     }
 
-    return Promise.all(
-      data.map(async (tweet) => {
+    if (processImage) {
+      return Promise.all(
+        data.map(async (tweet) => {
+          const {
+            full_text: text,
+            id_str: id,
+            created_at: createdAt,
+            entities: { media }
+          } = tweet.tweet;
+          const { name } = tweet.user;
+    
+          const tweetUrl = buildTweetUrl(name, id);
+  
+          const procMedia = await Promise.all(
+            media?.map(async (m) => {
+              if(!_.isNil(m.media_url_https) && (m.media_url_https as string).includes("pbs.twimg.com/media")){
+                const { data } = await this.runOcr(m.media_url_https);
+                return { url: m.media_url_https as string, text: data.result as string[] };
+              }
+              return null;
+            }).filter((v) => !_.isNil(v)) ?? []
+          )
+          return {
+            id: hashToUUID(`${text}${tweetUrl}`),
+            text,
+            date: createdAt,
+            url: tweetUrl,
+            media: procMedia,
+          };
+        })
+      );
+    } else {
+      return data.map((tweet) => {
         const {
           full_text: text,
           id_str: id,
-          created_at: createdAt,
-          entities: { media }
+          created_at: createdAt
         } = tweet.tweet;
         const { name } = tweet.user;
   
         const tweetUrl = buildTweetUrl(name, id);
-
-        const procMedia = await Promise.all(
-          media?.map(async (m) => {
-            if(!_.isNil(m.media_url_https)){
-              const { data } = await this.runOcr(m.media_url_https);
-              return { url: m.media_url_https, text: data.ocr_result };
-            }
-            return null;
-          })
-        )
         return {
           id: hashToUUID(`${text}${tweetUrl}`),
           text,
           date: createdAt,
-          url: tweetUrl,
-          media: procMedia,
+          url: tweetUrl
         };
-      })
-    )
+      });
+    }
+  }
 
-    return data.map((tweet) => {
-      const {
-        full_text: text,
-        id_str: id,
-        created_at: createdAt,
-        entities: { media }
-      } = tweet.tweet;
-      const { name } = tweet.user;
+  async runCaptioning(imageUrl: string) {
+    const postCfg: AxiosRequestConfig = {};
 
-      const tweetUrl = buildTweetUrl(name, id);
-      return {
-        id: hashToUUID(`${text}${tweetUrl}`),
-        text,
-        date: createdAt,
-        url: tweetUrl,
-        media: media?.map((m) => m.media_url_https) ?? [],
+    if (
+      !_.isNil(process.env.AUTH_TOKEN) &&
+      (process.env.AUTH_TOKEN as string).length > 0
+    ) {
+      postCfg.headers = {
+        "auth-token": process.env.AUTH_TOKEN,
       };
-    });
+    }
+
+    return axios.post(
+      buildCaptioningUrl(this.imageRecognitionUrl),
+      {
+        imageUrl,
+      },
+      postCfg,
+    );
   }
 
   async runOcr(imageUrl: string) {
@@ -180,7 +219,7 @@ export class CrawlManager {
     }
 
     return axios.post(
-      buildOcrUrl(this.ocrUrl),
+      buildOcrUrl(this.imageRecognitionUrl),
       {
         imageUrl,
       },

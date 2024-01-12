@@ -25,8 +25,8 @@ export class Captioning extends Processor {
   public async processImageUrl(imageUrl: string): Promise<string[]> {
     await this.setupDeferrer;
     const output = await this.pipeline(imageUrl);
-    const wrappedOutput = (Array.isArray(output) ? output : [output]) as ImageToTextOutput[];
-    return wrappedOutput.map((caption) => caption[0].generated_text);
+    const wrappedOutput = (Array.isArray(output) ? output : [output]) as ImageToTextOutput;
+    return wrappedOutput.map((caption) => caption.generated_text);
   }
 }
 

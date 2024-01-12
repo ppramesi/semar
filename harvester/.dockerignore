@@ -1,0 +1,8 @@
+creds
+assets
+backups
+node_modules
+.env
+.env.*
+deploy_notes
+dist

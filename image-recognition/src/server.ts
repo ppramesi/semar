@@ -50,7 +50,7 @@ export class Server {
     const { imageUrl } = req.body;
     try {
       const captionResult = await captioning.processImageUrl(imageUrl);
-      res.status(200).json({ status: "success", caption_result: captionResult });
+      res.status(200).json({ status: "success", result: captionResult });
       return;
     } catch (error) {
       res.status(400).json({ status: "error", error: error });
@@ -62,7 +62,7 @@ export class Server {
     const { imageUrl } = req.body;
     try {
       const ocrResult = await ocr.processImageUrl(imageUrl);
-      res.status(200).json({ status: "success", ocr_result: ocrResult });
+      res.status(200).json({ status: "success", result: ocrResult });
       return;
     } catch (error) {
       res.status(400).json({ status: "error", error: error });
