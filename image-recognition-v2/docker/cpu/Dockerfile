@@ -12,6 +12,10 @@ ARG IR_ENVIRONMENT
 COPY install.sh /usr/src/install.sh
 RUN chmod +x /usr/src/install.sh && /usr/src/install.sh
 
+ENV IR_ENVIRONMENT=cpu
+
+RUN python preload.py
+
 # Define environment variable
 ENV NAME World
 
