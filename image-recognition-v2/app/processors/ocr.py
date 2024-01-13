@@ -1,11 +1,12 @@
+import os
 import asyncio
 import easyocr
-from base import Processor  # Importing Processor from base.py
+from processors.base import Processor  # Importing Processor from base.py
 
 class OCR(Processor):
     def __init__(self):
         super().__init__()
-        self.reader = easyocr.Reader(['en'])  # Initialize EasyOCR reader
+        self.reader = easyocr.Reader(['en'], gpu=(os.getenv("IR_ENVIRONMENT") == "gpu"))  # Initialize EasyOCR reader
 
     async def recognize_text_and_group_by_lines(self, image_path: str):
         loop = asyncio.get_event_loop()

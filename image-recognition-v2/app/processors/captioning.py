@@ -1,11 +1,11 @@
 import asyncio
 from transformers import pipeline
-from base import Processor  # Importing Processor from base.py
+from processors.base import Processor  # Importing Processor from base.py
 
 class Captioning(Processor):
     def __init__(self):
         super().__init__()
-        self.caption_pipeline = pipeline("image-to-text", model="Xenova/vit-gpt2-image-captioning")
+        self.caption_pipeline = pipeline("image-to-text", model="nlpconnect/vit-gpt2-image-captioning")
 
     async def generate_caption(self, image_path: str):
         loop = asyncio.get_event_loop()

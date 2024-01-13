@@ -2,7 +2,7 @@ import { Server } from "./server.js";
 
 const testRun = async () => {
   const server = new Server();
-  await server.listen(process.env.IMAGE_RECOGNITION_PORT ?? 2323);
+  await server.listen(process.env.IR_PORT ?? 2323);
 }
 
 testRun()

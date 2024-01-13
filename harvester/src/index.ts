@@ -11,8 +11,8 @@ async function run() {
     const period = 1;
     const processorUrl = new URL(process.env.PROCESSOR_URL);
     processorUrl.port = process.env.PROCESSOR_PORT ?? "";
-    const imageRecognitionUrl = new URL(process.env.IMAGE_RECOGNITION_URL);
-    imageRecognitionUrl.port = process.env.IMAGE_RECOGNITION_PORT ?? "";
+    const imageRecognitionUrl = new URL(process.env.IR_URL);
+    imageRecognitionUrl.port = process.env.IR_PORT ?? "";
     const crawlManager = new CrawlManager({
       accountsSource: process.env.TWITTER_ACCOUNTS_SOURCE as "env" | "db",
       period,

@@ -45,8 +45,8 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_PORT: ${POSTGRES_PORT}
       AUTH_TOKEN: ${AUTH_TOKEN}
-      IMAGE_RECOGNITION_PORT: ${IMAGE_RECOGNITION_PORT}
-      IMAGE_RECOGNITION_URL: http://image-recognition
+      IR_PORT: ${IR_PORT}
+      IR_URL: http://image-recognition
   
   processor:
     build:
@@ -69,6 +69,7 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_PORT: ${POSTGRES_PORT}
       AUTH_TOKEN: ${AUTH_TOKEN}
+      PROCESSOR_PORT: ${PROCESSOR_PORT}
 
   frontend:
     build:
@@ -121,16 +122,19 @@ services:
   
   image-recognition:
     build:
-      context: ./image-recognition
-      dockerfile: Dockerfile
+      context: ./image-recognition-${IR_VERSION}
+      dockerfile: ./docker/${IR_ENVIRONMENT}/Dockerfile
     volumes:
-      - ./image-recognition:/app/src
+      - ./image-recognition-${IR_VERSION}:/app/src
     ports:
-      - "${IMAGE_RECOGNITION_PORT}:${IMAGE_RECOGNITION_PORT}"
+      - "${IR_PORT}:${IR_PORT}"
     depends_on:
       - db
     env_file: 
-      - ./image-recognition/.env
+      - ./image-recognition-${IR_VERSION}/.env
+    environment:
+      IR_PORT: ${IR_PORT}
+      IR_URL: ${IR_URL}
 
 volumes:
   db-data:

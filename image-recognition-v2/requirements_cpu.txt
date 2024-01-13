@@ -1,6 +1,7 @@
-torch==1.8.0+cpu
-torchvision==0.9.0+cpu
-torchaudio==0.8.0+cpu
+--find-links https://download.pytorch.org/whl/torch_stable.html
+torch==2.1.2+cpu
+torchvision==0.16.2+cpu
+torchaudio==2.1.2+cpu
 easyocr
 asyncio
 transformers[torch]

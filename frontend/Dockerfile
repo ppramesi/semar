@@ -2,15 +2,13 @@ FROM node:18.14.2 as base
 
 ARG NITRO_PORT
 
-ENV NODE_ENV=production
-
 WORKDIR /src
 
 # Build
 FROM base as build
 
 COPY . .
-RUN npm install --production=false
+RUN npm install
 
 RUN npm run build
 RUN npm prune

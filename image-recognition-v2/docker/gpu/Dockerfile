@@ -2,18 +2,18 @@
 FROM nvcr.io/nvidia/pytorch:23.12-py3
 
 # Set the working directory in the container
-WORKDIR /src/app
+WORKDIR /usr/src
 
-# Copy the current directory contents into the container at /usr/src/app
+# Copy the current directory contents into the container at /usr/src
 COPY . .
 
 # Install any needed packages specified in requirements files
-ARG PROJECT_ENV
-COPY install.sh /src/app/install.sh
-RUN chmod +x /src/app/install.sh && /src/app/install.sh
+ARG IR_ENVIRONMENT
+COPY install.sh /usr/src/install.sh
+RUN chmod +x /usr/src/install.sh && /usr/src/install.sh
 
 # Define environment variable
 ENV NAME World
 
 # Run the application
-CMD ["python", "./server.py"]
+CMD ["python3", "./app/index.py"]
