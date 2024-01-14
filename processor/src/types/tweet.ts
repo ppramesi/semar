@@ -5,7 +5,10 @@ export type Tweet = {
   url: string;
   tags?: string[];
   embedding?: number[];
-  media?: string[];
+  media?: {
+    text: string[];
+    caption: string[];
+  }[];
 };
 
 export type BetweenDates = {

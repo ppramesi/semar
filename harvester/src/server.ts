@@ -45,8 +45,8 @@ export class Server {
     res: Response,
   ): Promise<void> {
     try {
-      const data = await this.crawlManager.run();
-      res.status(200).json({ status: "success", data });
+      await this.crawlManager.run();
+      res.status(200).json({ status: "success" });
     } catch (error) {
       res.status(400).json({ status: "error", error: error.message });
     }
@@ -55,14 +55,14 @@ export class Server {
   private async handleSearchTweets(req: Request, res: Response): Promise<void> {
     const { searchTerms, fromDate, toDate } = req.body;
     try {
-      const data = await this.crawlManager.crawl(
+      const tweets = await this.crawlManager.crawl(
         searchTerms,
         new Date(fromDate),
         new Date(toDate),
         5,
         "TOP",
       );
-      res.status(200).json({ status: "success", data });
+      res.status(200).json({ status: "success", tweets });
       return;
     } catch (error) {
       res.status(400).json({ status: "error", error: error.message });

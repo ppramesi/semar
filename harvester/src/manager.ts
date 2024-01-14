@@ -12,8 +12,8 @@ export type TweetCrawlerOutput = {
   date: string;
   url: string;
   media?: {
-    url: string;
     text: string[];
+    caption: string[];
   }[];
 };
 
@@ -111,7 +111,7 @@ export class CrawlManager {
     toDate: Date,
     tweetCount?: number,
     tab: "LATEST" | "TOP" = "LATEST",
-    processImage: boolean = false,
+    processImage: boolean = true,
   ): Promise<TweetCrawlerOutput[]> {
     let accessToken = await this.authStore.getAuth();
     let data: TweetMappedReturn[];
@@ -146,23 +146,39 @@ export class CrawlManager {
           const { name } = tweet.user;
     
           const tweetUrl = buildTweetUrl(name, id);
-  
-          const procMedia = await Promise.all(
-            media?.map(async (m) => {
-              if(!_.isNil(m.media_url_https) && (m.media_url_https as string).includes("pbs.twimg.com/media")){
-                const { data } = await this.runOcr(m.media_url_https);
-                return { url: m.media_url_https as string, text: data.result as string[] };
-              }
-              return null;
-            }).filter((v) => !_.isNil(v)) ?? []
-          )
-          return {
-            id: hashToUUID(`${text}${tweetUrl}`),
-            text,
-            date: createdAt,
-            url: tweetUrl,
-            media: procMedia,
-          };
+
+          try {
+            const procMedia = await Promise.all(
+              media?.map(async (m) => {
+                if(!_.isNil(m.media_url_https) && (m.media_url_https as string).includes("pbs.twimg.com/media")){
+                  try {
+                    const [ { data: ocrData }, { data: imtData } ] = await Promise.all([
+                      this.runOcr(m.media_url_https),
+                      this.runCaptioning(m.media_url_https)
+                    ]);
+                    return { text: ocrData.result as string[], caption: imtData.result as string[] };
+                  } catch (_error) {
+                    return null
+                  }
+                }
+                return null;
+              }).filter((v) => !_.isNil(v)) ?? []
+            )
+            return {
+              id: hashToUUID(`${text}${tweetUrl}`),
+              text,
+              date: createdAt,
+              url: tweetUrl,
+              media: procMedia,
+            };
+          } catch (error) {
+            return {
+              id: hashToUUID(`${text}${tweetUrl}`),
+              text,
+              date: createdAt,
+              url: tweetUrl
+            };
+          }
         })
       );
     } else {
@@ -246,7 +262,7 @@ export class CrawlManager {
       };
     }
 
-    return axios.post(
+    await axios.post(
       buildProcessTweetsUrl(this.processorUrl),
       {
         tweets,

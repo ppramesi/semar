@@ -5,3 +5,4 @@
 .env.production
 /dist/
 /test/
+/__pycache__/

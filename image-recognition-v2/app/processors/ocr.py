@@ -10,7 +10,10 @@ class OCR(Processor):
 
     async def recognize_text_and_group_by_lines(self, image_path: str):
         loop = asyncio.get_event_loop()
-        results = await loop.run_in_executor(self.executor, self.reader.readtext, image_path, True)
+        huh = self.reader.readtext(image_path)
+        print(huh)
+        results = await loop.run_in_executor(self.executor, self.reader.readtext, image_path)
+        print(results)
 
         lines = {}
         for (bbox, text, confidence) in results:
