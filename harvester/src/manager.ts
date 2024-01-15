@@ -148,7 +148,7 @@ export class CrawlManager {
           const tweetUrl = buildTweetUrl(name, id);
 
           try {
-            const procMedia = await Promise.all(
+            const procMedia = (await Promise.all(
               media?.map(async (m) => {
                 if(!_.isNil(m.media_url_https) && (m.media_url_https as string).includes("pbs.twimg.com/media")){
                   try {
@@ -157,13 +157,14 @@ export class CrawlManager {
                       this.runCaptioning(m.media_url_https)
                     ]);
                     return { text: ocrData.result as string[], caption: imtData.result as string[] };
-                  } catch (_error) {
+                  } catch (error) {
+                    console.log(`OCR or captioning fucked up: ${error}`)
                     return null
                   }
                 }
                 return null;
-              }).filter((v) => !_.isNil(v)) ?? []
-            )
+              })
+            )).filter((v) => !_.isNil(v)) ?? [];
             return {
               id: hashToUUID(`${text}${tweetUrl}`),
               text,

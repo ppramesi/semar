@@ -9,7 +9,7 @@ const { value } = data;
   <div class="w-screen">
     <div class="flex flex-col w-96 mx-auto">
       <div 
-        v-if="value" 
+        v-if="value && value?.length > 0" 
         v-for="summary in value"
       >
         <div>
@@ -21,6 +21,9 @@ const { value } = data;
         <div>
           {{ summary.ref_tweets.join(", ") }}
         </div>
+      </div>
+      <div v-else>
+        No data
       </div>
     </div>
   </div>

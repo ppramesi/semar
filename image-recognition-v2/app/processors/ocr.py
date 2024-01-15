@@ -6,6 +6,7 @@ from processors.base import Processor  # Importing Processor from base.py
 class OCR(Processor):
     def __init__(self):
         super().__init__()
+        print("OCR using " + os.getenv("IR_ENVIRONMENT"))
         self.reader = easyocr.Reader(['en'], gpu=(os.getenv("IR_ENVIRONMENT") == "gpu"))  # Initialize EasyOCR reader
 
     async def recognize_text_and_group_by_lines(self, image_path: str):

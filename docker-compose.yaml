@@ -8,6 +8,8 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
+    profiles:
+      - db
     ports:
       - "${POSTGRES_PORT}:${POSTGRES_PORT}"
     volumes:
@@ -21,6 +23,8 @@ services:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
       PGADMIN_LISTEN_PORT: ${PGADMIN_PORT}
+    profiles:
+      - db
     depends_on:
       - db
     ports:
@@ -36,6 +40,8 @@ services:
       - "${HARVESTER_PORT}:${HARVESTER_PORT}"
     depends_on:
       - db
+    profiles:
+      - services
     env_file: 
       - ./harvester/.env
     environment:
@@ -60,6 +66,8 @@ services:
       - "${PROCESSOR_PORT}:${PROCESSOR_PORT}"
     depends_on:
       - db
+    profiles:
+      - services
     env_file: 
       - ./processor/.env
     environment:
@@ -79,12 +87,15 @@ services:
       dockerfile: Dockerfile
       args:
         - NITRO_PORT=${NITRO_PORT}
+        - NITRO_HOST=${NITRO_HOST}
     volumes:
       - ./frontend:/app/src
     ports:
       - "${NITRO_PORT}:${NITRO_PORT}"
     depends_on:
       - db
+    profiles:
+      - services
     env_file: 
       - ./frontend/.env
     environment:
@@ -107,6 +118,8 @@ services:
       - "${SCHEDULER_PORT}:${SCHEDULER_PORT}"
     depends_on:
       - db
+    profiles:
+      - services
     env_file: 
       - ./scheduler/.env
     environment:
@@ -130,12 +143,16 @@ services:
       - ./image-recognition-${IR_VERSION}:/app/src
     ports:
       - "${IR_PORT}:${IR_PORT}"
+    profiles:
+      - ml
     env_file: 
       - ./image-recognition-${IR_VERSION}/.env
     environment:
       IR_PORT: ${IR_PORT}
       IR_URL: ${IR_URL}
       AUTH_TOKEN: ${AUTH_TOKEN}
+      IR_ENVIRONMENT: ${IR_ENVIRONMENT}
+      IR_VERSION: ${IR_VERSION}
 
 volumes:
   db-data:
