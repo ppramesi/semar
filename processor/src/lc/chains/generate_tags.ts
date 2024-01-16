@@ -12,6 +12,7 @@ import {
 } from "../prompts/generate_tags.js";
 import { BaseChatModel } from "langchain/chat_models/base";
 import { UnbrittledKeyOutputFunctionParser } from "../parsers/function_output_parser.js";
+import { Callbacks } from "langchain/callbacks";
 
 const keyName = "extracted_tags";
 
@@ -34,6 +35,7 @@ const buildPrompt = () =>
 
 export type TagGeneratorOpts = {
   llm: BaseChatModel;
+  callbacks?: Callbacks;
 };
 
 export class TagGenerator extends TweetChain {
@@ -42,6 +44,7 @@ export class TagGenerator extends TweetChain {
   constructor(opts: TagGeneratorOpts) {
     const functionName = "output_formatter";
     super({
+      callbacks: opts.callbacks ?? [],
       llm: opts.llm,
       prompt: buildPrompt(),
       outputParser: new UnbrittledKeyOutputFunctionParser({

@@ -22,7 +22,7 @@ async function run() {
     });
 
     const server = new Server({
-      crawlManager
+      crawlManager,
     });
     server.listen(process.env.HARVESTER_PORT ?? 2222);
   } catch (error) {

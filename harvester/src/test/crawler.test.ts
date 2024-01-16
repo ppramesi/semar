@@ -4,22 +4,34 @@ import { CrawlManager } from "../manager";
 
 config();
 
-test("Test", async () => {
-  const period = 1;
-  const processorUrl = new URL(process.env.PROCESSOR_URL);
-  processorUrl.port = process.env.PROCESSOR_PORT ?? "";
-  const ocrUrl = new URL(process.env.IR_URL);
-  ocrUrl.port = process.env.IR_PORT ?? "";
-  const crawlManager = new CrawlManager({
-    accountsSource: process.env.TWITTER_ACCOUNTS_SOURCE as "env" | "db",
-    period,
-    tweetCount: 20,
-    processorUrl: processorUrl.toString(),
-    imageRecognitionUrl: ocrUrl.toString(),
-  });
+test(
+  "Test",
+  async () => {
+    const period = 1;
+    const processorUrl = new URL(process.env.PROCESSOR_URL);
+    processorUrl.port = process.env.PROCESSOR_PORT ?? "";
+    const ocrUrl = new URL(process.env.IR_URL);
+    ocrUrl.port = process.env.IR_PORT ?? "";
+    const crawlManager = new CrawlManager({
+      accountsSource: process.env.TWITTER_ACCOUNTS_SOURCE as "env" | "db",
+      period,
+      tweetCount: 20,
+      processorUrl: processorUrl.toString(),
+      imageRecognitionUrl: ocrUrl.toString(),
+    });
 
-  const sevenDaysAgo = new Date(new Date().getTime() - 3 * 24 * 60 * 60 * 1000);
+    const sevenDaysAgo = new Date(
+      new Date().getTime() - 3 * 24 * 60 * 60 * 1000,
+    );
 
-  const crawled = await crawlManager.crawl("from:@CC2Ventures", sevenDaysAgo, new Date(), 5, "TOP");
-  console.log({crawled: JSON.stringify(crawled, null, 2)});
-}, 60 * 1000);
+    const crawled = await crawlManager.crawl(
+      "from:@CC2Ventures",
+      sevenDaysAgo,
+      new Date(),
+      5,
+      "TOP",
+    );
+    console.log({ crawled: JSON.stringify(crawled, null, 2) });
+  },
+  60 * 1000,
+);

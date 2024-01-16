@@ -4,6 +4,9 @@ import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import dotenv from "dotenv";
 import pgPromise from "pg-promise";
+import { Client } from "langsmith";
+import { LangChainTracer } from "langchain/callbacks";
+import _ from "lodash";
 
 dotenv.config();
 
@@ -45,10 +48,27 @@ async function connectWithRetry(
   throw new Error("Failed to connect to the database after retries");
 }
 
+const modelCallbacks = [];
+if (
+  !_.isEmpty(process.env.LANGSMITH_API_KEY) &&
+  !_.isEmpty(process.env.LANGSMITH_PROJECT_NAME)
+) {
+  const client = new Client({
+    apiUrl: "https://api.smith.langchain.com",
+    apiKey: process.env.LANGSMITH_API_KEY,
+  });
+
+  const tracer = new LangChainTracer({
+    projectName: process.env.LANGSMITH_PROJECT_NAME,
+    client: client as Client,
+  });
+  modelCallbacks.push(tracer);
+}
+
 const embeddings = new OpenAIEmbeddings();
 
 const llm35 = new ChatOpenAI({
-  modelName: "gpt-3.5-turbo",
+  modelName: "gpt-3.5-turbo-1106",
   maxConcurrency: 5,
   temperature: 0.2,
 });
@@ -66,6 +86,7 @@ const server = new SemarHttpServer({
   llm: llm35,
   embeddings,
   port: parseInt(process.env.PROCESSOR_PORT!) ?? 42069,
+  callbacks: modelCallbacks,
 });
 
 server.buildRoute();

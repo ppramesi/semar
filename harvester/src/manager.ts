@@ -141,30 +141,42 @@ export class CrawlManager {
             full_text: text,
             id_str: id,
             created_at: createdAt,
-            entities: { media }
+            entities: { media },
           } = tweet.tweet;
           const { name } = tweet.user;
-    
+
           const tweetUrl = buildTweetUrl(name, id);
 
           try {
-            const procMedia = (await Promise.all(
-              media?.map(async (m) => {
-                if(!_.isNil(m.media_url_https) && (m.media_url_https as string).includes("pbs.twimg.com/media")){
-                  try {
-                    const [ { data: ocrData }, { data: imtData } ] = await Promise.all([
-                      this.runOcr(m.media_url_https),
-                      this.runCaptioning(m.media_url_https)
-                    ]);
-                    return { text: ocrData.result as string[], caption: imtData.result as string[] };
-                  } catch (error) {
-                    console.log(`OCR or captioning fucked up: ${error}`)
-                    return null
-                  }
-                }
-                return null;
-              })
-            )).filter((v) => !_.isNil(v)) ?? [];
+            const procMedia =
+              (
+                await Promise.all(
+                  media?.map(async (m) => {
+                    if (
+                      !_.isNil(m.media_url_https) &&
+                      (m.media_url_https as string).includes(
+                        "pbs.twimg.com/media",
+                      )
+                    ) {
+                      try {
+                        const [{ data: ocrData }, { data: imtData }] =
+                          await Promise.all([
+                            this.runOcr(m.media_url_https),
+                            this.runCaptioning(m.media_url_https),
+                          ]);
+                        return {
+                          text: ocrData.result as string[],
+                          caption: imtData.result as string[],
+                        };
+                      } catch (error) {
+                        console.log(`OCR or captioning fucked up: ${error}`);
+                        return null;
+                      }
+                    }
+                    return null;
+                  }),
+                )
+              ).filter((v) => !_.isNil(v)) ?? [];
             return {
               id: hashToUUID(`${text}${tweetUrl}`),
               text,
@@ -177,26 +189,26 @@ export class CrawlManager {
               id: hashToUUID(`${text}${tweetUrl}`),
               text,
               date: createdAt,
-              url: tweetUrl
+              url: tweetUrl,
             };
           }
-        })
+        }),
       );
     } else {
       return data.map((tweet) => {
         const {
           full_text: text,
           id_str: id,
-          created_at: createdAt
+          created_at: createdAt,
         } = tweet.tweet;
         const { name } = tweet.user;
-  
+
         const tweetUrl = buildTweetUrl(name, id);
         return {
           id: hashToUUID(`${text}${tweetUrl}`),
           text,
           date: createdAt,
-          url: tweetUrl
+          url: tweetUrl,
         };
       });
     }

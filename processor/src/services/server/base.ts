@@ -11,11 +11,13 @@ import { TweetAggregator } from "../../lc/chains/aggregator.js";
 import { v4 } from "uuid";
 import { DuplicateChecker } from "../../lc/chains/duplicate_checker.js";
 import callerInstance, { Caller } from "../caller.js";
+import { Callbacks } from "langchain/callbacks";
 
 export type SemarServerOpts = {
   db: SemarPostgres;
   llm: BaseChatModel;
   embeddings: Embeddings;
+  callbacks?: Callbacks;
 };
 
 export abstract class SemarServer {
@@ -28,10 +30,12 @@ export abstract class SemarServer {
   relevancyEvaluator: TweetRelevancyEvaluator;
   dupeChecker: DuplicateChecker;
   harvesterCaller: Caller = callerInstance;
+  callbacks: Callbacks;
   constructor(opts: SemarServerOpts) {
     this.db = opts.db;
     this.llm = opts.llm;
     this.embedding = opts.embeddings;
+    this.callbacks = opts.callbacks ?? [];
     this.tagGenerator = new TagGenerator({
       llm: this.llm,
     });
@@ -51,10 +55,13 @@ export abstract class SemarServer {
 
   async generateTags(tweets: Tweet[]): Promise<string[][]> {
     const procTweets = TagGenerator.processTweets(tweets);
-    const { extracted_tags: tags } = await this.tagGenerator.call({
-      batch_size: tweets.length,
-      tweets: procTweets,
-    });
+    const { extracted_tags: tags } = await this.tagGenerator.call(
+      {
+        batch_size: tweets.length,
+        tweets: procTweets,
+      },
+      { callbacks: this.callbacks ?? [] },
+    );
 
     return tags as string[][];
   }
@@ -80,11 +87,14 @@ export abstract class SemarServer {
     const procTweets = DuplicateChecker.processTweets(tweets);
     const dupeCheckResults = await Promise.all(
       docsResult.map((summary) => {
-        return this.dupeChecker.call({
-          tweets: procTweets,
-          summary: summary.pageContent,
-          summary_date: summary.metadata["date"],
-        });
+        return this.dupeChecker.call(
+          {
+            tweets: procTweets,
+            summary: summary.pageContent,
+            summary_date: summary.metadata["date"],
+          },
+          { callbacks: this.callbacks ?? [] },
+        );
       }),
     );
 
@@ -162,10 +172,13 @@ export abstract class SemarServer {
 
   async aggregateTweets(tweets: Tweet[]): Promise<Tweet[][]> {
     const procTweets = TweetAggregator.processTweets(tweets);
-    const { aggregated_tweets: groupedTweetIds } = await this.aggregator.call({
-      batch_size: tweets.length,
-      tweets: procTweets,
-    });
+    const { aggregated_tweets: groupedTweetIds } = await this.aggregator.call(
+      {
+        batch_size: tweets.length,
+        tweets: procTweets,
+      },
+      { callbacks: this.callbacks ?? [] },
+    );
     // Map for quick ID to Tweet object lookup
     const idToTweetMap = new Map(tweets.map((tweet) => [tweet.id, tweet]));
 
@@ -184,11 +197,14 @@ export abstract class SemarServer {
       contextTweets && contextTweets.length > 0
         ? TweetSummarizer.processTweets(contextTweets)
         : "";
-    const { text: result } = await this.summarizer.call({
-      batch_size: tweets.length,
-      tweets: procTweets,
-      context_tweets: conxTweets,
-    });
+    const { text: result } = await this.summarizer.call(
+      {
+        batch_size: tweets.length,
+        tweets: procTweets,
+        context_tweets: conxTweets,
+      },
+      { callbacks: this.callbacks ?? [] },
+    );
     const allTweets = [...tweets, ...(contextTweets ?? [])];
     const refTweets = allTweets
       .filter((t) => {
@@ -226,11 +242,16 @@ export abstract class SemarServer {
   async filterRelevantTweets(tweets: Tweet[]) {
     const relevantTags = await this.db.fetchRelevancyTags();
     if (relevantTags.length > 0) {
-      const { relevant_tweets: ids } = await this.relevancyEvaluator.call({
-        batch_size: tweets.length,
-        tweets: TweetRelevancyEvaluator.processTweets(tweets),
-        topics: relevantTags.map((t) => t.tag).join(","),
-      });
+      const { relevant_tweets: ids } = await this.relevancyEvaluator.call(
+        {
+          batch_size: tweets.length,
+          tweets: TweetRelevancyEvaluator.processTweets(tweets),
+          topics: `<topic>${relevantTags
+            .map((t) => t.tag)
+            .join("</topic><topic>")}</topic>`,
+        },
+        { callbacks: this.callbacks ?? [] },
+      );
       return tweets.filter((t) => (ids as string[]).includes(t.id));
     } else {
       return tweets;

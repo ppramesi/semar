@@ -12,6 +12,7 @@ import {
 } from "../prompts/relevancy.js";
 import { BaseChatModel } from "langchain/chat_models/base";
 import { UnbrittledKeyOutputFunctionParser } from "../parsers/function_output_parser.js";
+import { Callbacks } from "langchain/callbacks";
 
 const keyName = "relevant_tweets";
 
@@ -30,6 +31,7 @@ const buildPrompt = () =>
 
 export type RelevancyOpts = {
   llm: BaseChatModel;
+  callbacks?: Callbacks;
 };
 
 export class TweetRelevancyEvaluator extends TweetChain {
@@ -37,6 +39,7 @@ export class TweetRelevancyEvaluator extends TweetChain {
   constructor(opts: RelevancyOpts) {
     const functionName = "output_formatter";
     super({
+      callbacks: opts.callbacks ?? [],
       llm: opts.llm,
       prompt: buildPrompt(),
       outputParser: new UnbrittledKeyOutputFunctionParser({

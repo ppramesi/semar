@@ -29,7 +29,9 @@ export class Caller {
         };
       }
 
-      const { data: { tweets }}: { data: { tweets: Tweet[] }} = await axios.post(
+      const {
+        data: { tweets },
+      }: { data: { tweets: Tweet[] } } = await axios.post(
         this.harvesterUrl.toString(),
         {
           searchTerms: keywords,

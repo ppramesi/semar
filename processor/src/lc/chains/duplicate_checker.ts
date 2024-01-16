@@ -15,6 +15,7 @@ import {
 import { CallbackManagerForChainRun } from "@langchain/core/callbacks/manager";
 import { ChainValues } from "@langchain/core/utils/types";
 import { UnbrittledKeyOutputFunctionParser } from "../parsers/function_output_parser.js";
+import { Callbacks } from "langchain/callbacks";
 
 const keyName = "duplicated";
 
@@ -37,6 +38,7 @@ const buildPrompt = () =>
 
 export type DuplicateCheckerOpts = {
   llm: BaseChatModel;
+  callbacks?: Callbacks;
 };
 
 export class DuplicateChecker extends TweetChain {
@@ -44,6 +46,7 @@ export class DuplicateChecker extends TweetChain {
   constructor(opts: DuplicateCheckerOpts) {
     const functionName = "output_formatter";
     super({
+      callbacks: opts.callbacks ?? [],
       llm: opts.llm,
       prompt: buildPrompt(),
       outputParser: new UnbrittledKeyOutputFunctionParser({

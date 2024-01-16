@@ -13,6 +13,7 @@ import { BaseChatModel } from "langchain/chat_models/base";
 import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { UnbrittledKeyOutputFunctionParser } from "../parsers/function_output_parser.js";
+import { Callbacks } from "langchain/callbacks";
 
 const keyName = "aggregated_tweets";
 
@@ -35,6 +36,7 @@ const buildPrompt = () =>
 
 export type AggregatorOpts = {
   llm: BaseChatModel;
+  callbacks?: Callbacks;
 };
 
 export class TweetAggregator extends TweetChain {
@@ -42,6 +44,7 @@ export class TweetAggregator extends TweetChain {
   constructor(opts: AggregatorOpts) {
     const functionName = "output_formatter";
     super({
+      callbacks: opts.callbacks ?? [],
       llm: opts.llm,
       prompt: buildPrompt(),
       outputParser: new UnbrittledKeyOutputFunctionParser({

@@ -12,12 +12,12 @@ export class Server {
     this.app = express();
     this.app.use(express.json());
     this.setupRoutes();
-    console.log("Setting up OCR and captioning workers + models + a bunch of other shit...might take a while");
-    Promise.all([
-      ocr.getDeferrer(),
-      captioning.getDeferrer()
-    ])
-      .then(() => this.setupDeferrer.resolve())
+    console.log(
+      "Setting up OCR and captioning workers + models + a bunch of other shit...might take a while",
+    );
+    Promise.all([ocr.getDeferrer(), captioning.getDeferrer()]).then(() =>
+      this.setupDeferrer.resolve(),
+    );
   }
 
   private authMiddleware(req: Request, res: Response, next: () => void): void {
@@ -36,17 +36,14 @@ export class Server {
 
   private setupRoutes(): void {
     this.app.use(this.authMiddleware.bind(this));
-    this.app.post(
-      "/ocr",
-      this.handleOcrRequest.bind(this),
-    );
-    this.app.post(
-      "/caption",
-      this.handleCaptionRequest.bind(this),
-    );
+    this.app.post("/ocr", this.handleOcrRequest.bind(this));
+    this.app.post("/caption", this.handleCaptionRequest.bind(this));
   }
 
-  private async handleCaptionRequest(req: Request, res: Response): Promise<void> {
+  private async handleCaptionRequest(
+    req: Request,
+    res: Response,
+  ): Promise<void> {
     const { imageUrl } = req.body;
     try {
       const captionResult = await captioning.processImageUrl(imageUrl);
@@ -77,6 +74,6 @@ export class Server {
         console.log(`Server listening on port ${port}`);
         resolve();
       });
-    })
+    });
   }
 }

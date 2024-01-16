@@ -1,6 +1,6 @@
 import {
   // BaseChain,
-  ChainInputs,
+  // ChainInputs,
   // StuffDocumentsChain,
   StuffDocumentsChainInput,
 } from "langchain/chains";
@@ -11,15 +11,17 @@ import {
   SystemMessagePromptTemplate,
 } from "langchain/prompts";
 import { TweetChain } from "./base.js";
+import { Callbacks } from "langchain/callbacks";
 import {
   SUMMARIZER_PROMPT,
   SUMMARIZER_SYSTEM_PROMPT,
 } from "../prompts/summarizer.js";
 import { BaseChatModel } from "langchain/chat_models/base";
 
-export interface TweetSummarizerOpts extends ChainInputs {
+export interface TweetSummarizerOpts {
   llm: BaseChatModel;
   summarizerOpts?: StuffDocumentsChainInput;
+  callbacks?: Callbacks;
 }
 
 const buildPrompt = () =>
@@ -33,6 +35,10 @@ const buildPrompt = () =>
 
 export class TweetSummarizer extends TweetChain {
   constructor(opts: TweetSummarizerOpts) {
-    super({ llm: opts.llm, prompt: buildPrompt() });
+    super({
+      callbacks: opts.callbacks ?? [],
+      llm: opts.llm,
+      prompt: buildPrompt(),
+    });
   }
 }
