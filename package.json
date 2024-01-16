@@ -6,7 +6,7 @@
     "processor",
     "harvester",
     "scheduler",
-    "image-recognition"
+    "image-recognition-v1"
   ],
   "description": "news aggregator",
   "main": "index.js",

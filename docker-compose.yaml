@@ -9,6 +9,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
     profiles:
+      - all
       - db
     ports:
       - "${POSTGRES_PORT}:${POSTGRES_PORT}"
@@ -24,6 +25,7 @@ services:
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
       PGADMIN_LISTEN_PORT: ${PGADMIN_PORT}
     profiles:
+      - all
       - db
     depends_on:
       - db
@@ -41,6 +43,7 @@ services:
     depends_on:
       - db
     profiles:
+      - all
       - services
     env_file: 
       - ./harvester/.env
@@ -67,6 +70,7 @@ services:
     depends_on:
       - db
     profiles:
+      - all
       - services
     env_file: 
       - ./processor/.env
@@ -95,6 +99,7 @@ services:
     depends_on:
       - db
     profiles:
+      - all
       - services
     env_file: 
       - ./frontend/.env
@@ -119,6 +124,7 @@ services:
     depends_on:
       - db
     profiles:
+      - all
       - services
     env_file: 
       - ./scheduler/.env
@@ -144,6 +150,7 @@ services:
     ports:
       - "${IR_PORT}:${IR_PORT}"
     profiles:
+      - all
       - ml
     env_file: 
       - ./image-recognition-${IR_VERSION}/.env

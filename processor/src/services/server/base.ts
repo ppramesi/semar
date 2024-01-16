@@ -103,7 +103,7 @@ export abstract class SemarServer {
       new Date().getTime() - 14 * 24 * 60 * 60 * 1000,
     );
     return this.harvesterCaller.searchRelevantTweets(
-      `("${keywords.join(`" AND "`)}") min_faves:5`,
+      `("${keywords.join(`" AND "`)}") min_faves:10`,
       sevenDaysAgo,
       new Date(),
     );

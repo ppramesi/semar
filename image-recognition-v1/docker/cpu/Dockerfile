@@ -21,7 +21,7 @@ RUN npm run build
 RUN npm prune --production
 
 # Production image
-FROM node:18-alpine
+FROM node:18
 WORKDIR /app
 
 # Copy package.json and package-lock.json
