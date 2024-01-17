@@ -7,6 +7,7 @@ import pgPromise from "pg-promise";
 import { Client } from "langsmith";
 import { LangChainTracer } from "langchain/callbacks";
 import _ from "lodash";
+import { TweetSummarizer } from "./lc/chains/summarizer.js";
 
 dotenv.config();
 
@@ -70,7 +71,13 @@ const embeddings = new OpenAIEmbeddings();
 const llm35 = new ChatOpenAI({
   modelName: "gpt-3.5-turbo-1106",
   maxConcurrency: 5,
-  temperature: 0.2,
+  temperature: 0.1,
+});
+
+const llm4 = new ChatOpenAI({
+  modelName: "gpt-4-1106-preview",
+  maxConcurrency: 5,
+  temperature: 0.1,
 });
 
 const db = new SemarPostgres({
@@ -83,7 +90,10 @@ await db.ensureTablesInDatabase();
 
 const server = new SemarHttpServer({
   db,
-  llm: llm35,
+  baseLlm: llm35,
+  llms: new Map([
+    [ TweetSummarizer, llm4 ]
+  ]),
   embeddings,
   port: parseInt(process.env.PROCESSOR_PORT!) ?? 42069,
   callbacks: modelCallbacks,

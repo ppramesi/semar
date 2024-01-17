@@ -9,7 +9,11 @@ export default {
     "./error.vue",
   ],
   theme: {
-    extend: {},
+    extend: {
+      "width": {
+        "192": "48rem",
+      }
+    },
   },
   plugins: [
     require('@tailwindcss/typography')

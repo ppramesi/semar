@@ -264,6 +264,10 @@ export class CrawlManager {
       new Date(),
     );
 
+    if (_.isEmpty(tweets)) {
+      return;
+    }
+
     const postCfg: AxiosRequestConfig = {};
 
     if (

@@ -15,14 +15,15 @@ import { Callbacks } from "langchain/callbacks";
 
 export type SemarServerOpts = {
   db: SemarPostgres;
-  llm: BaseChatModel;
+  baseLlm: BaseChatModel;
+  llms?: Map<typeof TagGenerator, BaseChatModel>;
   embeddings: Embeddings;
   callbacks?: Callbacks;
 };
 
 export abstract class SemarServer {
   db: SemarPostgres;
-  llm: BaseChatModel;
+  baseLlm: BaseChatModel;
   embedding: Embeddings;
   tagGenerator: TagGenerator;
   summarizer: TweetSummarizer;
@@ -33,23 +34,23 @@ export abstract class SemarServer {
   callbacks: Callbacks;
   constructor(opts: SemarServerOpts) {
     this.db = opts.db;
-    this.llm = opts.llm;
+    this.baseLlm = opts.baseLlm;
     this.embedding = opts.embeddings;
     this.callbacks = opts.callbacks ?? [];
     this.tagGenerator = new TagGenerator({
-      llm: this.llm,
+      llm: opts.llms?.get(TagGenerator) ?? this.baseLlm,
     });
     this.summarizer = new TweetSummarizer({
-      llm: this.llm,
+      llm: opts.llms?.get(TweetSummarizer) ?? this.baseLlm,
     });
     this.relevancyEvaluator = new TweetRelevancyEvaluator({
-      llm: this.llm,
+      llm: opts.llms?.get(TweetRelevancyEvaluator) ?? this.baseLlm,
     });
     this.aggregator = new TweetAggregator({
-      llm: this.llm,
+      llm: opts.llms?.get(TweetAggregator) ?? this.baseLlm,
     });
     this.dupeChecker = new DuplicateChecker({
-      llm: this.llm,
+      llm: opts.llms?.get(DuplicateChecker) ?? this.baseLlm,
     });
   }
 
@@ -246,9 +247,9 @@ export abstract class SemarServer {
         {
           batch_size: tweets.length,
           tweets: TweetRelevancyEvaluator.processTweets(tweets),
-          topics: `<topic>${relevantTags
+          topics: relevantTags
             .map((t) => t.tag)
-            .join("</topic><topic>")}</topic>`,
+            .join(", "),
         },
         { callbacks: this.callbacks ?? [] },
       );
@@ -259,6 +260,9 @@ export abstract class SemarServer {
   }
 
   async processTweets(rawTweets: Tweet[]): Promise<void> {
+    if (_.isEmpty(rawTweets)) {
+      return;
+    }
     let tweets = rawTweets;
     tweets.map((tweet) => {
       if (_.isNil(tweet.id)) {
@@ -266,6 +270,9 @@ export abstract class SemarServer {
       }
     });
     tweets = await this.filterRelevantTweets(tweets);
+    if (_.isEmpty(tweets)) {
+      return;
+    }
     const rawAggregated = await this.aggregateTweets(tweets);
 
     const tagsEmbeddings = await Promise.all(
