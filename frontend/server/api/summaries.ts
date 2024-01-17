@@ -4,7 +4,7 @@ import { defineEventHandler } from "h3";
 
 export default defineEventHandler(async (event) => {
   try {
-    const summaries = await pgInstance.manyOrNone<RawSummary>("SELECT * FROM summaries");
+    const summaries = await pgInstance.manyOrNone<RawSummary>("SELECT * FROM summaries ORDER BY date DESC");
     return summaries.map(summary => {
       return {
         ...summary,

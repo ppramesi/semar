@@ -16,12 +16,12 @@ export default defineEventHandler(async (event) => {
     if (tweetIds && tweetIds.length > 0) {
       // Fetch tweets by a list of IDs
       rawTweets = await pgInstance.manyOrNone<RawTweet>(
-        "SELECT id, date, tags, text, url FROM tweets WHERE id = ANY($1::uuid[])",
+        "SELECT id, date, tags, text, url FROM tweets WHERE id = ANY($1::uuid[]) ORDER BY date DESC",
         [tweetIds]
       );
     } else {
       // Fetch all tweets when no IDs are provided
-      rawTweets = await pgInstance.manyOrNone<RawTweet>("SELECT id, date, tags, text, url FROM tweets");
+      rawTweets = await pgInstance.manyOrNone<RawTweet>("SELECT id, date, tags, text, url FROM tweets ORDER BY date DESC");
     }
 
     const tweet: Tweet[] = rawTweets.map((tweet) => {

@@ -30,7 +30,7 @@ const refTweets = value?.reduce((acc, summary) => {
   <div class="w-screen">
     <div class="flex flex-col w-192 mx-auto">
       <div 
-        class="my-2 pb-4 px-6 border border-gray-300 rounded-md"
+        class="my-2 py-6 px-8 border border-gray-300 rounded-md"
         v-if="value && value?.length > 0" 
         v-for="summary in value"
       >
@@ -41,8 +41,8 @@ const refTweets = value?.reduce((acc, summary) => {
           <div class="flex flex-col">
             Sources:
           </div>
-          <div v-for="source in refTweets[summary.id]">
-            <div v-if="source">
+          <div v-for="source in refTweets[summary.id]" class="my-2">
+            <div>
               <a :href="source.url" target="_blank">
                 {{ source.url }}
               </a>
