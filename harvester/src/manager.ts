@@ -111,7 +111,7 @@ export class CrawlManager {
     toDate: Date,
     tweetCount?: number,
     tab: "LATEST" | "TOP" = "LATEST",
-    processImage: boolean = true,
+    processImage: boolean = false,
   ): Promise<TweetCrawlerOutput[]> {
     let accessToken = await this.authStore.getAuth();
     let data: TweetMappedReturn[];
@@ -143,9 +143,9 @@ export class CrawlManager {
             created_at: createdAt,
             entities: { media },
           } = tweet.tweet;
-          const { name } = tweet.user;
+          const { screen_name } = tweet.user;
 
-          const tweetUrl = buildTweetUrl(name, id);
+          const tweetUrl = buildTweetUrl(screen_name, id);
 
           try {
             const procMedia =
@@ -201,9 +201,9 @@ export class CrawlManager {
           id_str: id,
           created_at: createdAt,
         } = tweet.tweet;
-        const { name } = tweet.user;
+        const { screen_name } = tweet.user;
 
-        const tweetUrl = buildTweetUrl(name, id);
+        const tweetUrl = buildTweetUrl(screen_name, id);
         return {
           id: hashToUUID(`${text}${tweetUrl}`),
           text,
@@ -262,6 +262,9 @@ export class CrawlManager {
       searchTerms,
       hoursBeforeRightMeow(this.period),
       new Date(),
+      5,
+      "TOP",
+      process.env.USE_IR === "true",
     );
 
     if (_.isEmpty(tweets)) {

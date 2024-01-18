@@ -58,6 +58,7 @@ services:
       AUTH_TOKEN: ${AUTH_TOKEN}
       IR_PORT: ${IR_PORT}
       IR_URL: http://image-recognition
+      USE_IR: ${USE_IR}
   
   processor:
     build:

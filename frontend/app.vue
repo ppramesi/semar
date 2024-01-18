@@ -66,7 +66,7 @@ const tags = joinWithCommasAnd(tagData.value?.map(v => v.tag));
 <template>
   <div class="w-screen">
     <div class="flex flex-col w-192 mx-auto">
-      <h1 class="mb-4 mt-6 text-4xl font-extrabold leading-none tracking-tight text-gray-900 md:text-5xl lg:text-6xl dark:text-white">News for {{ tags }}</h1>
+      <h1 class="mb-4 mt-6 text-4xl font-extrabold leading-none tracking-tight text-gray-900 md:text-5xl lg:text-6xl">News for {{ tags }}</h1>
       <div v-if="value && value?.length > 0">
         <div 
           class="my-2 py-6 px-8 border border-gray-300 rounded-md"

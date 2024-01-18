@@ -305,15 +305,20 @@ export abstract class SemarServer {
                 tweets[i].embedding = embeddings[i];
                 tweets[i].tags = tags[i];
               }
+
               const [vsRelevantTweets, twRelevantTweets] = await Promise.all([
-                this.fetchRelevantTweetsFromVectorStore(tweets[0], 10),
-                this.fetchRelevantTweetsFromSearch(tags[0]),
+                Promise.all(
+                  tweets.map((tweet) =>
+                    this.fetchRelevantTweetsFromVectorStore(tweet, 10),
+                  ),
+                ),
+                Promise.all(tags.map(this.fetchRelevantTweetsFromSearch)),
                 this.saveTweets(tweets),
               ]);
               console.log({ vsRelevantTweets, twRelevantTweets });
               const summary = await this.summarizeTweets(tweets, [
-                ...vsRelevantTweets,
-                ...twRelevantTweets,
+                ...vsRelevantTweets.flat(),
+                ...twRelevantTweets.flat(),
               ]);
 
               return summary;

@@ -61,6 +61,7 @@ export class Server {
         new Date(toDate),
         5,
         "TOP",
+        process.env.USE_IR === "true",
       );
       res.status(200).json({ status: "success", tweets });
       return;

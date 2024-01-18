@@ -20,13 +20,11 @@ test(
       imageRecognitionUrl: ocrUrl.toString(),
     });
 
-    const sevenDaysAgo = new Date(
-      new Date().getTime() - 3 * 24 * 60 * 60 * 1000,
-    );
+    const anHourAgo = new Date(new Date().getTime() - 60 * 60 * 1000);
 
     const crawled = await crawlManager.crawl(
-      "from:@CC2Ventures",
-      sevenDaysAgo,
+      "from:@ap",
+      anHourAgo,
       new Date(),
       5,
       "TOP",
