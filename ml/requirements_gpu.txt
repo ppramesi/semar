@@ -1,0 +1,11 @@
+torch
+torchvision
+torchaudio
+asyncio
+transformers
+fastapi
+uvicorn
+python-dotenv
+Pillow==9.5.0
+sentence-transformers
+pydantic

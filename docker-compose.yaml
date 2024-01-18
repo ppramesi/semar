@@ -162,6 +162,25 @@ services:
       AUTH_TOKEN: ${AUTH_TOKEN}
       IR_ENVIRONMENT: ${IR_ENVIRONMENT}
       IR_VERSION: ${IR_VERSION}
+  
+  ml:
+    build:
+      context: ./ml
+      dockerfile: ./docker/${ML_ENVIRONMENT}/Dockerfile
+    volumes:
+      - ./ml:/app/src
+    ports:
+      - "${ML_PORT}:${ML_PORT}"
+    profiles:
+      - all
+      - ml
+    env_file: 
+      - ./ml/.env
+    environment:
+      ML_PORT: ${ML_PORT}
+      ML_URL: ${ML_URL}
+      AUTH_TOKEN: ${AUTH_TOKEN}
+      ML_ENVIRONMENT: ${ML_ENVIRONMENT}
 
 volumes:
   db-data:

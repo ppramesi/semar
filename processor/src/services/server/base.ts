@@ -10,7 +10,7 @@ import { PGFilter } from "../../lc/vectorstores/pg.js";
 import { TweetAggregator } from "../../lc/chains/aggregator.js";
 import { v4 } from "uuid";
 import { DuplicateChecker } from "../../lc/chains/duplicate_checker.js";
-import callerInstance, { Caller } from "../caller.js";
+import callerInstance, { ServiceCaller } from "../caller.js";
 import { Callbacks } from "langchain/callbacks";
 
 export type SemarServerOpts = {
@@ -30,7 +30,7 @@ export abstract class SemarServer {
   aggregator: TweetAggregator;
   relevancyEvaluator: TweetRelevancyEvaluator;
   dupeChecker: DuplicateChecker;
-  harvesterCaller: Caller = callerInstance;
+  serviceCaller: ServiceCaller = callerInstance;
   callbacks: Callbacks;
   constructor(opts: SemarServerOpts) {
     this.db = opts.db;
@@ -113,7 +113,7 @@ export abstract class SemarServer {
     const sevenDaysAgo = new Date(
       new Date().getTime() - 14 * 24 * 60 * 60 * 1000,
     );
-    return this.harvesterCaller.searchRelevantTweets(
+    return this.serviceCaller.searchRelevantTweets(
       `("${keywords.join(`" AND "`)}") min_faves:10`,
       sevenDaysAgo,
       new Date(),
@@ -168,7 +168,13 @@ export abstract class SemarServer {
       return [];
     }
     const docs = searchResults.map((res) => res[0]);
-    return SemarPostgres.fromSearchResultsToTweets(docs);
+    const rerankIndices = await this.serviceCaller.crossEncoderRerank(
+      tweet.text,
+      docs.map((d) => d.pageContent),
+    );
+    return SemarPostgres.fromSearchResultsToTweets(
+      rerankIndices.map((idx) => docs[idx]),
+    ).slice(0, 5);
   }
 
   async aggregateTweets(tweets: Tweet[]): Promise<Tweet[][]> {
@@ -247,9 +253,7 @@ export abstract class SemarServer {
         {
           batch_size: tweets.length,
           tweets: TweetRelevancyEvaluator.processTweets(tweets),
-          topics: relevantTags
-            .map((t) => t.tag)
-            .join(", "),
+          topics: relevantTags.map((t) => t.tag).join(", "),
         },
         { callbacks: this.callbacks ?? [] },
       );
@@ -302,7 +306,7 @@ export abstract class SemarServer {
                 tweets[i].tags = tags[i];
               }
               const [vsRelevantTweets, twRelevantTweets] = await Promise.all([
-                this.fetchRelevantTweetsFromVectorStore(tweets[0], 5),
+                this.fetchRelevantTweetsFromVectorStore(tweets[0], 10),
                 this.fetchRelevantTweetsFromSearch(tags[0]),
                 this.saveTweets(tweets),
               ]);

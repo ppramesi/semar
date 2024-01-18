@@ -91,9 +91,7 @@ await db.ensureTablesInDatabase();
 const server = new SemarHttpServer({
   db,
   baseLlm: llm35,
-  llms: new Map([
-    [ TweetSummarizer, llm4 ]
-  ]),
+  llms: new Map([[TweetSummarizer, llm4]]),
   embeddings,
   port: parseInt(process.env.PROCESSOR_PORT!) ?? 42069,
   callbacks: modelCallbacks,
