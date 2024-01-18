@@ -22,13 +22,10 @@ const allSummaries = ref<Summary[]>([]);
 const refTweets = ref<{ [key: string]: Tweet[] }>({});
 
 const { data: tagData } = await useFetch<Tag[]>("/api/tags");
-const { data: newSummaries } = await useFetch<Summary[]>(`/api/summaries`);
-allSummaries.value = [...allSummaries.value, ...(newSummaries.value ?? [])];
 
-async function loadMore() {
-  currentPage.value += 1;
-  if (newSummaries.value) {
-    const { data: newSummaries } = await useFetch<Summary[]>(`/api/summaries/${currentPage.value}`);
+async function fetchSummaries(page?: number){
+  const summariesEndpoint = page ? `/api/summaries/${page}` : "/api/summaries";
+    const { data: newSummaries } = await useFetch<Summary[]>(summariesEndpoint);
     allSummaries.value = [...allSummaries.value, ...(newSummaries.value ?? [])];
 
     // Re-fetch tweets if needed
@@ -45,7 +42,13 @@ async function loadMore() {
         refTweets.value[summary.id] = tweets;
       }
     });
-  }
+}
+
+fetchSummaries();
+
+async function loadMore() {
+  currentPage.value += 1;
+  await fetchSummaries(currentPage.value);
 }
 
 const value = computed(() => {
