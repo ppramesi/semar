@@ -31,7 +31,7 @@ export class ServiceCaller {
   ): Promise<number[]> {
     if (
       _.isNil(this.mlUrl) ||
-      process.env.RERANK_VECTORSTORE_RESULTS !== "true"
+      process.env.RERANK_VECTOR_SEARCH_RESULTS !== "true"
     ) {
       return queries.map((_, idx) => idx);
     }

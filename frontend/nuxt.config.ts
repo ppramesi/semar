@@ -8,6 +8,7 @@ export default defineNuxtConfig({
     postgresDb: process.env.NUXT_POSTGRES_DB,
     postgresPort: process.env.NUXT_POSTGRES_PORT,
     postgresHost: process.env.NUXT_POSTGRES_HOST,
+    summariesPerPage: process.env.NUXT_SUMMARIES_PER_PAGE,
   },
   postcss: {
     plugins: {

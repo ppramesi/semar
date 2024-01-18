@@ -68,6 +68,7 @@
     "../node_modules",
     "../../node_modules",
     "../../node_modules/nuxt/node_modules",
-    "../dist"
+    "../dist",
+    "../tailwind.config.js"
   ]
 }

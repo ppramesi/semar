@@ -1,10 +1,13 @@
 import { RawSummary, Summary } from "~/types/summary";
 import pgInstance from "../../lib/db";
 import { defineEventHandler } from "h3";
+import { getSummariesPerPage } from "~/lib/env";
+
+const summariesPerPage = getSummariesPerPage();
 
 export default defineEventHandler(async (event) => {
   try {
-    const summaries = await pgInstance.manyOrNone<RawSummary>("SELECT * FROM summaries ORDER BY date DESC");
+    const summaries = await pgInstance.manyOrNone<RawSummary>("SELECT * FROM summaries ORDER BY date DESC LIMIT $1", [summariesPerPage]);
     return summaries.map(summary => {
       return {
         ...summary,
