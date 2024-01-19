@@ -10,7 +10,7 @@ import { PGFilter } from "../../lc/vectorstores/pg.js";
 import { TweetAggregator } from "../../lc/chains/aggregator.js";
 import { v4 } from "uuid";
 import { DuplicateChecker } from "../../lc/chains/duplicate_checker.js";
-import callerInstance, { ServiceCaller } from "../caller.js";
+import callerInstance, { HttpServiceCaller } from "../callers/http_caller.js";
 import { Callbacks } from "langchain/callbacks";
 
 export type SemarServerOpts = {
@@ -21,6 +21,18 @@ export type SemarServerOpts = {
   callbacks?: Callbacks;
 };
 
+function removeUrls(inputText: string): string {
+  // Regular expression to match URLs that start with https://
+  const urlRegex = /https?:\/\/[^\s]+/g;
+
+  // Replace matched URLs with an empty string
+  let textWithoutUrls = inputText.replace(urlRegex, "");
+
+  // Regular expression to replace double spaces (or more) with a single space
+  const extraSpaceRegex = /\s{2,}/g;
+  return textWithoutUrls.replace(extraSpaceRegex, " ");
+}
+
 export abstract class SemarServer {
   db: SemarPostgres;
   baseLlm: BaseChatModel;
@@ -30,7 +42,7 @@ export abstract class SemarServer {
   aggregator: TweetAggregator;
   relevancyEvaluator: TweetRelevancyEvaluator;
   dupeChecker: DuplicateChecker;
-  serviceCaller: ServiceCaller = callerInstance;
+  serviceCaller: HttpServiceCaller = callerInstance;
   callbacks: Callbacks;
   constructor(opts: SemarServerOpts) {
     this.db = opts.db;
@@ -249,15 +261,24 @@ export abstract class SemarServer {
   async filterRelevantTweets(tweets: Tweet[]) {
     const relevantTags = await this.db.fetchRelevancyTags();
     if (relevantTags.length > 0) {
+      const zeroShotTest = await this.serviceCaller.zeroShotClassification(
+        tweets.map((t) => removeUrls(t.text)),
+        relevantTags.map((t) => t.tag),
+      );
+
+      const filteredTweets = tweets.filter((_, idx) => {
+        return zeroShotTest[idx].length > 0;
+      });
+
       const { relevant_tweets: ids } = await this.relevancyEvaluator.call(
         {
-          batch_size: tweets.length,
-          tweets: TweetRelevancyEvaluator.processTweets(tweets),
+          batch_size: filteredTweets.length,
+          tweets: TweetRelevancyEvaluator.processTweets(filteredTweets),
           topics: relevantTags.map((t) => t.tag).join(", "),
         },
         { callbacks: this.callbacks ?? [] },
       );
-      return tweets.filter((t) => (ids as string[]).includes(t.id));
+      return filteredTweets.filter((t) => (ids as string[]).includes(t.id));
     } else {
       return tweets;
     }

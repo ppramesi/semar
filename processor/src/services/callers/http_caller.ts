@@ -1,7 +1,8 @@
 import axios, { AxiosRequestConfig } from "axios";
 import _ from "lodash";
-import { Tweet } from "../types/tweet.js";
+import { Tweet } from "../../types/tweet.js";
 import dotenv from "dotenv";
+import { BaseServiceCaller } from "./base.js";
 
 dotenv.config();
 
@@ -10,18 +11,59 @@ interface RerankRequest {
   queries: string[];
 }
 
-export class ServiceCaller {
+export class HttpServiceCaller extends BaseServiceCaller {
   harvesterUrl: URL;
   mlUrl?: URL;
   constructor() {
+    super();
     if (_.isNil(process.env.HARVESTER_URL)) {
       throw new Error("HARVESTER_URL not set");
     }
     this.harvesterUrl = new URL(process.env.HARVESTER_URL as string);
     this.harvesterUrl.port = process.env.HARVESTER_PORT as string;
-    if (!_.isNil(process.env.ML_URL)) {
+    if (!_.isEmpty(process.env.ML_URL)) {
       this.mlUrl = new URL(process.env.ML_URL as string);
       this.mlUrl.port = process.env.ML_PORT as string;
+    }
+  }
+
+  async zeroShotClassification(
+    texts: string[],
+    tags: string[],
+  ): Promise<string[][]> {
+    if (
+      _.isNil(this.mlUrl) ||
+      process.env.ZERO_SHOT_CLASSIFY_TWEETS !== "true"
+    ) {
+      return texts.map((_) => tags);
+    }
+
+    this.mlUrl.pathname = "/classify";
+    try {
+      const postCfg: AxiosRequestConfig = {};
+
+      if (
+        !_.isNil(process.env.AUTH_TOKEN) &&
+        (process.env.AUTH_TOKEN as string).length > 0
+      ) {
+        postCfg.headers = {
+          "auth-token": process.env.AUTH_TOKEN,
+        };
+      }
+
+      const response = await axios.post<string[][]>(
+        this.mlUrl.toString(),
+        {
+          queries: texts,
+          classes: tags,
+        },
+        postCfg,
+      );
+
+      return response.data;
+    } catch (error) {
+      console.error("Error during the API call:", error);
+      throw error;
     }
   }
 
@@ -102,4 +144,4 @@ export class ServiceCaller {
   }
 }
 
-export default new ServiceCaller();
+export default new HttpServiceCaller();

@@ -57,7 +57,6 @@ export class Scheduler {
       },
       (err: Error) => {
         console.error(err);
-        throw err;
       },
     );
     this.job = new SimpleIntervalJob(this.rule, task);
