@@ -153,11 +153,16 @@ export abstract class SemarServer {
 
     const relevancyFilter: PGFilter = {};
     if (!_.isNil(tweet.tags)) {
-      const tsVectTags = tweet.tags.join(" | ");
+      const tsVectTags = tweet.tags.map(tag => {
+        const spaceSplit = tag.toLowerCase().split(" ");
+        if (spaceSplit.length > 0) {
+          return `(${spaceSplit.join(" <-> ")})`;
+        }
+        return tag.toLowerCase();
+      }).join(" | ");
       relevancyFilter["text"] = {
         $textSearch: {
           query: tsVectTags,
-          type: "plain",
           config: "english",
         },
       };
@@ -333,7 +338,9 @@ export abstract class SemarServer {
                     this.fetchRelevantTweetsFromVectorStore(tweet, 10),
                   ),
                 ),
-                Promise.all(tags.map(this.fetchRelevantTweetsFromSearch)),
+                Promise.all(tags.map((tag) => {
+                  return this.fetchRelevantTweetsFromSearch(tag)
+                })),
                 this.saveTweets(tweets),
               ]);
               console.log({ vsRelevantTweets, twRelevantTweets });

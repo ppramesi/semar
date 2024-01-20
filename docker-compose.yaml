@@ -45,6 +45,7 @@ services:
     profiles:
       - all
       - services
+      - notdb
     env_file: 
       - ./harvester/.env
     environment:
@@ -58,7 +59,7 @@ services:
       AUTH_TOKEN: ${AUTH_TOKEN}
       IR_PORT: ${IR_PORT}
       IR_URL: http://image-recognition
-      USE_IR: ${USE_IR}
+      USE_IR: false
   
   processor:
     build:
@@ -73,6 +74,7 @@ services:
     profiles:
       - all
       - services
+      - notdb
     env_file: 
       - ./processor/.env
     environment:
@@ -108,6 +110,7 @@ services:
     profiles:
       - all
       - services
+      - notdb
     env_file: 
       - ./frontend/.env
     environment:
@@ -133,6 +136,7 @@ services:
     profiles:
       - all
       - services
+      - notdb
     env_file: 
       - ./scheduler/.env
     environment:
@@ -157,8 +161,7 @@ services:
     ports:
       - "${IR_PORT}:${IR_PORT}"
     profiles:
-      - all
-      - ml
+      - ir
     env_file: 
       - ./image-recognition-${IR_VERSION}/.env
     environment:
@@ -179,6 +182,7 @@ services:
     profiles:
       - all
       - ml
+      - notdb
     env_file: 
       - ./ml/.env
     environment:

@@ -51,7 +51,7 @@ export class HttpServiceCaller extends BaseServiceCaller {
         };
       }
 
-      const response = await axios.post<string[][]>(
+      const response = await axios.post<{ status: string, result: string[][] }>(
         this.mlUrl.toString(),
         {
           queries: texts,
@@ -60,7 +60,7 @@ export class HttpServiceCaller extends BaseServiceCaller {
         postCfg,
       );
 
-      return response.data;
+      return response.data.result;
     } catch (error) {
       console.error("Error during the API call:", error);
       throw error;
