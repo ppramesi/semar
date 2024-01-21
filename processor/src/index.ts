@@ -8,6 +8,9 @@ import { Client } from "langsmith";
 import { LangChainTracer } from "langchain/callbacks";
 import _ from "lodash";
 import { TweetSummarizer } from "./lc/chains/summarizer.js";
+import { ClassifierAggregator } from "./processors/classifier_aggregator/base.js";
+import { ZeroShotClassifierAggregator } from "./processors/classifier_aggregator/zero_shot.js";
+import { LLMClassifierAggregator } from "./processors/classifier_aggregator/llm.js";
 
 dotenv.config();
 
@@ -88,6 +91,18 @@ const db = new SemarPostgres({
 
 await db.ensureTablesInDatabase();
 
+let classifierAggregator: ClassifierAggregator;
+if (process.env.CLASSIFIER_AGGREGATOR === "zero-shot") {
+  classifierAggregator = new ZeroShotClassifierAggregator();
+} else if (process.env.CLASSIFIER_AGGREGATOR === "llm") {
+  classifierAggregator = new LLMClassifierAggregator({
+    baseLlm: llm35,
+    callbacks: modelCallbacks,
+  });
+} else {
+  throw new Error("Classifier aggregator not set");
+}
+
 const server = new SemarHttpServer({
   db,
   baseLlm: llm35,
@@ -95,6 +110,7 @@ const server = new SemarHttpServer({
   embeddings,
   port: parseInt(process.env.PROCESSOR_PORT!) ?? 42069,
   callbacks: modelCallbacks,
+  classifierAggregator,
 });
 
 server.buildRoute();

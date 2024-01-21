@@ -10,8 +10,8 @@ export abstract class BaseServiceCaller {
     passages: string[],
   ): Promise<number[]>;
   abstract searchRelevantTweets(
-    keywords: string, 
-    fromDate: Date, 
-    toDate: Date
+    keywords: string,
+    fromDate: Date,
+    toDate: Date,
   ): Promise<Tweet[]>;
 }

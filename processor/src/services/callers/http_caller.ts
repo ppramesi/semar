@@ -51,7 +51,7 @@ export class HttpServiceCaller extends BaseServiceCaller {
         };
       }
 
-      const response = await axios.post<{ status: string, result: string[][] }>(
+      const response = await axios.post<{ status: string; result: string[][] }>(
         this.mlUrl.toString(),
         {
           queries: texts,
@@ -97,13 +97,13 @@ export class HttpServiceCaller extends BaseServiceCaller {
         };
       }
 
-      const response = await axios.post<number[]>(
+      const response = await axios.post<{ status: string; result: number[] }>(
         this.mlUrl.toString(),
         requestData,
         postCfg,
       );
 
-      return response.data;
+      return response.data.result;
     } catch (error) {
       console.error("Error during the API call:", error);
       throw error;

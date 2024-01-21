@@ -79,24 +79,31 @@ const tags = joinWithCommasAnd(tagData.value?.map(v => v.tag));
             <div class="flex flex-col">
               Sources:
             </div>
-            <div v-for="source in refTweets[summary.id]" class="my-2">
-              <div>
-                <a :href="source.url" target="_blank">
-                  {{ source.url }}
-                </a>
-              </div>
-              <div>
-                {{ source.text }}
+            <div class="flex flex-col">
+              <div v-for="source in refTweets[summary.id]" class="my-2 p-4 border border-gray-300 rounded-md">
+                <div class="mb-2">
+                  {{ source.text }}
+                </div>
+                <div class="mb-2">
+                  <a :href="source.url" target="_blank">
+                    {{ source.url }}
+                  </a>
+                </div>
+                <div>
+                  Tags: {{ joinWithCommasAnd(source.tags) }}
+                </div>
               </div>
             </div>
           </div>
         </div>
-        <button 
-          @click="loadMore"
-          class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded"
-        >
-          Load More
-        </button>
+        <div class="w-full">
+          <button 
+            @click="loadMore"
+            class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded"
+          >
+            Load More
+          </button>
+        </div>
       </div>
       <div v-else>
         No News :(

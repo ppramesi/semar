@@ -4,34 +4,24 @@ import { SemarPostgres } from "../../adapters/db/pg.js";
 import { Embeddings } from "langchain/embeddings/base";
 import { TagGenerator } from "../../lc/chains/generate_tags.js";
 import { TweetSummarizer } from "../../lc/chains/summarizer.js";
-import { TweetRelevancyEvaluator } from "../../lc/chains/relevancy.js";
 import _ from "lodash";
-import { PGFilter } from "../../lc/vectorstores/pg.js";
-import { TweetAggregator } from "../../lc/chains/aggregator.js";
+import { PGFilterWithJoin } from "../../lc/vectorstores/pg.js";
 import { v4 } from "uuid";
 import { DuplicateChecker } from "../../lc/chains/duplicate_checker.js";
 import callerInstance, { HttpServiceCaller } from "../callers/http_caller.js";
 import { Callbacks } from "langchain/callbacks";
+import { ClassifierAggregator } from "../../processors/classifier_aggregator/base.js";
+import { TopicSplitter } from "../../lc/chains/topic_splitter.js";
+import { Tag } from "../../types/tag.js";
 
 export type SemarServerOpts = {
   db: SemarPostgres;
   baseLlm: BaseChatModel;
-  llms?: Map<typeof TagGenerator, BaseChatModel>;
+  classifierAggregator: ClassifierAggregator;
   embeddings: Embeddings;
+  llms?: Map<typeof TagGenerator, BaseChatModel>;
   callbacks?: Callbacks;
 };
-
-function removeUrls(inputText: string): string {
-  // Regular expression to match URLs that start with https://
-  const urlRegex = /https?:\/\/[^\s]+/g;
-
-  // Replace matched URLs with an empty string
-  let textWithoutUrls = inputText.replace(urlRegex, "");
-
-  // Regular expression to replace double spaces (or more) with a single space
-  const extraSpaceRegex = /\s{2,}/g;
-  return textWithoutUrls.replace(extraSpaceRegex, " ");
-}
 
 export abstract class SemarServer {
   db: SemarPostgres;
@@ -39,8 +29,8 @@ export abstract class SemarServer {
   embedding: Embeddings;
   tagGenerator: TagGenerator;
   summarizer: TweetSummarizer;
-  aggregator: TweetAggregator;
-  relevancyEvaluator: TweetRelevancyEvaluator;
+  topicSplitter: TopicSplitter;
+  classifierAggregator: ClassifierAggregator;
   dupeChecker: DuplicateChecker;
   serviceCaller: HttpServiceCaller = callerInstance;
   callbacks: Callbacks;
@@ -49,20 +39,18 @@ export abstract class SemarServer {
     this.baseLlm = opts.baseLlm;
     this.embedding = opts.embeddings;
     this.callbacks = opts.callbacks ?? [];
+    this.classifierAggregator = opts.classifierAggregator;
     this.tagGenerator = new TagGenerator({
       llm: opts.llms?.get(TagGenerator) ?? this.baseLlm,
     });
     this.summarizer = new TweetSummarizer({
       llm: opts.llms?.get(TweetSummarizer) ?? this.baseLlm,
     });
-    this.relevancyEvaluator = new TweetRelevancyEvaluator({
-      llm: opts.llms?.get(TweetRelevancyEvaluator) ?? this.baseLlm,
-    });
-    this.aggregator = new TweetAggregator({
-      llm: opts.llms?.get(TweetAggregator) ?? this.baseLlm,
-    });
     this.dupeChecker = new DuplicateChecker({
       llm: opts.llms?.get(DuplicateChecker) ?? this.baseLlm,
+    });
+    this.topicSplitter = new TopicSplitter({
+      llm: opts.llms?.get(TopicSplitter) ?? this.baseLlm,
     });
   }
 
@@ -79,6 +67,34 @@ export abstract class SemarServer {
     return tags as string[][];
   }
 
+  buildPGFilter(tweet: Tweet) {
+    let relevancyFilter: PGFilterWithJoin | undefined;
+    if (!_.isNil(tweet.tags)) {
+      const tsVectTags = tweet.tags
+        .map((tag) => {
+          const spaceSplit = tag.toLowerCase().split(" ");
+          if (spaceSplit.length > 0) {
+            return `(${spaceSplit.join(" <-> ")})`;
+          }
+          return tag.toLowerCase();
+        })
+        .join(" | ");
+
+      relevancyFilter = {
+        columnFilter: {
+          text: {
+            $textSearch: {
+              query: tsVectTags,
+              config: "english",
+            },
+          },
+        },
+      };
+    }
+
+    return relevancyFilter;
+  }
+
   async generateEmbeddings(tweets: Tweet[]): Promise<number[][]> {
     const texts = tweets.map((tweet) => tweet.text);
     return this.embedding.embedDocuments(texts);
@@ -86,13 +102,17 @@ export abstract class SemarServer {
 
   async checkDuplicates(tweets: Tweet[]): Promise<boolean> {
     let text: string | null = null;
+    let selectedTweet: Tweet;
     while (_.isNil(text)) {
       const rand = Math.round(Math.random() * (tweets.length - 1));
-      text = tweets[rand].text;
+      selectedTweet = tweets[rand];
+      text = selectedTweet.text;
     }
+
     const docsResult = await this.db.summaryVectorstore.similaritySearch(
       text,
       3,
+      this.buildPGFilter(selectedTweet!),
     );
     if (docsResult.length === 0) {
       return false;
@@ -151,22 +171,6 @@ export abstract class SemarServer {
       tweet = tweetOrId;
     }
 
-    const relevancyFilter: PGFilter = {};
-    if (!_.isNil(tweet.tags)) {
-      const tsVectTags = tweet.tags.map(tag => {
-        const spaceSplit = tag.toLowerCase().split(" ");
-        if (spaceSplit.length > 0) {
-          return `(${spaceSplit.join(" <-> ")})`;
-        }
-        return tag.toLowerCase();
-      }).join(" | ");
-      relevancyFilter["text"] = {
-        $textSearch: {
-          query: tsVectTags,
-          config: "english",
-        },
-      };
-    }
     let embeddings: number[];
     if (!_.isNil(tweet.embedding)) {
       embeddings = tweet.embedding;
@@ -179,7 +183,7 @@ export abstract class SemarServer {
       await this.db.tweetVectorstore.similaritySearchVectorWithScore(
         embeddings,
         k,
-        relevancyFilter,
+        this.buildPGFilter(tweet),
       );
     if (searchResults.length === 0) {
       return [];
@@ -192,24 +196,6 @@ export abstract class SemarServer {
     return SemarPostgres.fromSearchResultsToTweets(
       rerankIndices.map((idx) => docs[idx]),
     ).slice(0, 5);
-  }
-
-  async aggregateTweets(tweets: Tweet[]): Promise<Tweet[][]> {
-    const procTweets = TweetAggregator.processTweets(tweets);
-    const { aggregated_tweets: groupedTweetIds } = await this.aggregator.call(
-      {
-        batch_size: tweets.length,
-        tweets: procTweets,
-      },
-      { callbacks: this.callbacks ?? [] },
-    );
-    // Map for quick ID to Tweet object lookup
-    const idToTweetMap = new Map(tweets.map((tweet) => [tweet.id, tweet]));
-
-    // Transform groupedTweetIds to groups of Tweet objects
-    return (groupedTweetIds as string[][]).map((group) =>
-      group.map((tweetId) => idToTweetMap.get(tweetId)),
-    ) as Tweet[][];
   }
 
   async summarizeTweets(
@@ -263,32 +249,6 @@ export abstract class SemarServer {
     this.db.tweetVectorstore.upsertVectors([tweetId], [vectorEmbeddings]);
   }
 
-  async filterRelevantTweets(tweets: Tweet[]) {
-    const relevantTags = await this.db.fetchRelevancyTags();
-    if (relevantTags.length > 0) {
-      const zeroShotTest = await this.serviceCaller.zeroShotClassification(
-        tweets.map((t) => removeUrls(t.text)),
-        relevantTags.map((t) => t.tag),
-      );
-
-      const filteredTweets = tweets.filter((_, idx) => {
-        return zeroShotTest[idx].length > 0;
-      });
-
-      const { relevant_tweets: ids } = await this.relevancyEvaluator.call(
-        {
-          batch_size: filteredTweets.length,
-          tweets: TweetRelevancyEvaluator.processTweets(filteredTweets),
-          topics: relevantTags.map((t) => t.tag).join(", "),
-        },
-        { callbacks: this.callbacks ?? [] },
-      );
-      return filteredTweets.filter((t) => (ids as string[]).includes(t.id));
-    } else {
-      return tweets;
-    }
-  }
-
   async processTweets(rawTweets: Tweet[]): Promise<void> {
     if (_.isEmpty(rawTweets)) {
       return;
@@ -299,14 +259,55 @@ export abstract class SemarServer {
         tweet.id = v4();
       }
     });
-    tweets = await this.filterRelevantTweets(tweets);
+    const relevantTags = await this.db.fetchRelevancyTags();
+
+    const preprocessorResult = await this.classifierAggregator.preprocessTweets(
+      tweets,
+      relevantTags,
+    );
+
+    const relevantTweets = await this.classifierAggregator.testRelevancy(
+      tweets,
+      relevantTags,
+      preprocessorResult,
+    );
     if (_.isEmpty(tweets)) {
       return;
     }
-    const rawAggregated = await this.aggregateTweets(tweets);
+
+    const rawAggregated = await this.classifierAggregator.aggregateTweets(
+      relevantTweets,
+      tweets,
+      preprocessorResult,
+    );
+
+    const splitByTopic = await rawAggregated.map(async (aggrTweets) => {
+      const procTweets = TopicSplitter.processTweets(aggrTweets);
+      const { aggregated_tweets: groupedTweetIds } =
+        await this.topicSplitter.call(
+          {
+            batch_size: aggrTweets.length,
+            tweets: procTweets,
+          },
+          { callbacks: this.callbacks ?? [] },
+        );
+      // Map for quick ID to Tweet object lookup
+      const idToTweetMap = new Map(tweets.map((tweet) => [tweet.id, tweet]));
+
+      // Transform groupedTweetIds to groups of Tweet objects
+      return (groupedTweetIds as string[][]).map((group) =>
+        group.map((tweetId) => idToTweetMap.get(tweetId)),
+      ) as Tweet[][];
+    });
+
+    const separatedAggregated = await Promise.all(splitByTopic).then(
+      (tweets) => {
+        return tweets.flat();
+      },
+    );
 
     const tagsEmbeddings = await Promise.all(
-      rawAggregated.map(async (tweets) => {
+      separatedAggregated.map(async (tweets) => {
         const isDupe = await this.checkDuplicates(tweets);
 
         if (!isDupe) {
@@ -338,16 +339,47 @@ export abstract class SemarServer {
                     this.fetchRelevantTweetsFromVectorStore(tweet, 10),
                   ),
                 ),
-                Promise.all(tags.map((tag) => {
-                  return this.fetchRelevantTweetsFromSearch(tag)
-                })),
+                Promise.all(
+                  tags.map((tag) => {
+                    return this.fetchRelevantTweetsFromSearch(tag);
+                  }),
+                ),
                 this.saveTweets(tweets),
               ]);
+              const currentTags = (
+                tweets
+                  .map((tweet) => tweet.tags)
+                  .filter((v) => !_.isNil(v))
+                  .flat() as string[]
+              ).map((tag) => {
+                return {
+                  id: v4(),
+                  tag,
+                } as Tag;
+              });
+
               console.log({ vsRelevantTweets, twRelevantTweets });
-              const summary = await this.summarizeTweets(tweets, [
+              const contextTweets = [
                 ...vsRelevantTweets.flat(),
                 ...twRelevantTweets.flat(),
-              ]);
+              ];
+
+              const innerPreprocessorResult =
+                await this.classifierAggregator.preprocessTweets(
+                  contextTweets,
+                  currentTags,
+                );
+              const filteredContextTweets =
+                await this.classifierAggregator.testRelevancy(
+                  contextTweets,
+                  currentTags,
+                  innerPreprocessorResult,
+                );
+
+              const summary = await this.summarizeTweets(
+                tweets,
+                filteredContextTweets,
+              );
 
               return summary;
             } else {

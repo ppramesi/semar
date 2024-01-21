@@ -6,6 +6,7 @@ import { SemarServer } from "../base.js";
 import { SemarPostgres } from "../../../adapters/db/pg.js";
 import { Tweet } from "../../../types/tweet.js";
 import { deferrer } from "../../../utils/deferrer.js";
+import { ZeroShotClassifierAggregator } from "../../../processors/classifier_aggregator/zero_shot.js";
 import { v4 } from "uuid";
 import dotenv from "dotenv";
 
@@ -123,14 +124,19 @@ beforeEach(async () => {
   semarServer = new DummySemarServer({
     db: semarPostgres,
     embeddings,
-    llm: llm35,
+    baseLlm: llm35,
+    classifierAggregator: new ZeroShotClassifierAggregator(),
   });
   defer.resolve();
 });
 
-test("Process Test", async () => {
-  await defer;
-  await semarServer.processTweets(tweets);
-  const summaries = await semarServer.db.fetchSummaries();
-  console.log({ summaries });
-});
+test(
+  "Process Test",
+  async () => {
+    await defer;
+    await semarServer.processTweets(tweets);
+    const summaries = await semarServer.db.fetchSummaries();
+    console.log({ summaries });
+  },
+  1000 * 60 * 60,
+);

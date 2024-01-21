@@ -1,8 +1,10 @@
 # Build dependencies
 FROM node:18 as builder
 WORKDIR /app
-COPY . .
+COPY package.json ./
 RUN npm i
+
+COPY . .
 RUN npm run build
 
 # Production image
