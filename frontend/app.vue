@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { type ScrapeAccount } from './types/scrape_account';
 import { type Summary } from './types/summary';
 import { type Tweet } from './types/tweet';
 import { type Tag } from './types/tag';
@@ -22,6 +23,10 @@ const allSummaries = ref<Summary[]>([]);
 const refTweets = ref<{ [key: string]: Tweet[] }>({});
 
 const { data: tagData } = await useFetch<Tag[]>("/api/tags");
+
+const { data: accountsData } = await useFetch<ScrapeAccount[]>("/api/scrape_accounts");
+
+const scrapeAccounts = joinWithCommasAnd(accountsData.value?.map(account => `@${account.name}`))
 
 async function fetchSummaries(page?: number){
   const summariesEndpoint = page ? `/api/summaries/${page}` : "/api/summaries";
@@ -66,7 +71,7 @@ const tags = joinWithCommasAnd(tagData.value?.map(v => v.tag));
 <template>
   <div class="w-screen">
     <div class="flex flex-col w-192 mx-auto">
-      <h1 class="mb-4 mt-6 text-4xl font-extrabold leading-none tracking-tight text-gray-900 md:text-5xl lg:text-6xl">News for {{ tags }}</h1>
+      <h1 class="mb-4 mt-6 text-4xl font-extrabold leading-none tracking-tight text-gray-900 md:text-5xl lg:text-6xl">News for {{ tags }} from {{ scrapeAccounts }}</h1>
       <div v-if="value && value?.length > 0">
         <div 
           class="my-2 py-6 px-8 border border-gray-300 rounded-md"
