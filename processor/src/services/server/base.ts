@@ -13,6 +13,7 @@ import { Callbacks } from "langchain/callbacks";
 import { ClassifierAggregator } from "../../processors/classifier_aggregator/base.js";
 import { TopicSplitter } from "../../lc/chains/topic_splitter.js";
 import { Tag } from "../../types/tag.js";
+import { hashToUUID } from "../../utils/hash.js";
 
 export type SemarServerOpts = {
   db: SemarPostgres;
@@ -250,6 +251,8 @@ export abstract class SemarServer {
   }
 
   async processTweets(rawTweets: Tweet[]): Promise<void> {
+    const uniqueHashes = new Set<string>();
+
     if (_.isEmpty(rawTweets)) {
       return;
     }
@@ -259,6 +262,9 @@ export abstract class SemarServer {
         tweet.id = v4();
       }
     });
+
+    tweets.forEach((tweet) => uniqueHashes.add(hashToUUID(tweet.text)));
+
     const relevantTags = await this.db.fetchRelevancyTags();
 
     const preprocessorResult = await this.classifierAggregator.preprocessTweets(
@@ -327,6 +333,7 @@ export abstract class SemarServer {
         await Promise.all(
           tagsEmbeddings.map(async (tagged) => {
             if (!_.isNil(tagged)) {
+              const taggedUniqueHashes = new Set<string>();
               const [tweets, tags, embeddings] = tagged;
               for (let i = 0; i < tweets.length; i++) {
                 tweets[i].embedding = embeddings[i];
@@ -362,7 +369,16 @@ export abstract class SemarServer {
               const contextTweets = [
                 ...vsRelevantTweets.flat(),
                 ...twRelevantTweets.flat(),
-              ];
+              ].filter((tweet) => {
+                const hash = hashToUUID(tweet.text);
+                if (uniqueHashes.has(hash) || taggedUniqueHashes.has(hash)) {
+                  return false;
+                }
+                taggedUniqueHashes.add(hash);
+                return true;
+              });
+
+              console.log({ contextTweets });
 
               const innerPreprocessorResult =
                 await this.classifierAggregator.preprocessTweets(

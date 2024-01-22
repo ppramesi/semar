@@ -1,10 +1,10 @@
 import { crawlReturned } from "./crawl";
 import axios, { AxiosRequestConfig } from "axios";
 import dbInstance, { Database } from "./db";
-import crypto from "crypto";
 import authStoreInstance, { AuthStore } from "./auth-store";
 import { TweetMappedReturn } from "./types/tweets.types";
 import _ from "lodash";
+import { hashToUUID } from "./utils/hash";
 
 export type TweetCrawlerOutput = {
   id: string;
@@ -24,17 +24,6 @@ export type CrawlManagerConfig = {
   processorUrl: string;
   imageRecognitionUrl: string;
 };
-
-function hashToUUID(inputString: string): string {
-  // Create an MD5 hash of the input string
-  const hash = crypto.createHash("md5").update(inputString).digest("hex");
-
-  // Format the hash as a UUID (8-4-4-4-12)
-  return `${hash.substring(0, 8)}-${hash.substring(8, 12)}-${hash.substring(
-    12,
-    16,
-  )}-${hash.substring(16, 20)}-${hash.substring(20, 32)}`;
-}
 
 function buildTweetUrl(user: string, id: string) {
   const twitterUrl = new URL("https://twitter.com/");
@@ -111,7 +100,7 @@ export class CrawlManager {
     toDate: Date,
     tweetCount?: number,
     tab: "LATEST" | "TOP" = "LATEST",
-    processImage: boolean = false,
+    processImage: boolean = false
   ): Promise<TweetCrawlerOutput[]> {
     let accessToken = await this.authStore.getAuth();
     let data: TweetMappedReturn[];
@@ -155,7 +144,7 @@ export class CrawlManager {
                     if (
                       !_.isNil(m.media_url_https) &&
                       (m.media_url_https as string).includes(
-                        "pbs.twimg.com/media",
+                        "pbs.twimg.com/media"
                       )
                     ) {
                       try {
@@ -174,7 +163,7 @@ export class CrawlManager {
                       }
                     }
                     return null;
-                  }),
+                  })
                 )
               ).filter((v) => !_.isNil(v)) ?? [];
             return {
@@ -192,7 +181,7 @@ export class CrawlManager {
               url: tweetUrl,
             };
           }
-        }),
+        })
       );
     } else {
       return data.map((tweet) => {
@@ -231,7 +220,7 @@ export class CrawlManager {
       {
         imageUrl,
       },
-      postCfg,
+      postCfg
     );
   }
 
@@ -252,7 +241,7 @@ export class CrawlManager {
       {
         imageUrl,
       },
-      postCfg,
+      postCfg
     );
   }
 
@@ -264,7 +253,7 @@ export class CrawlManager {
       new Date(),
       5,
       "TOP",
-      process.env.USE_IR === "true",
+      process.env.USE_IR === "true"
     );
 
     if (_.isEmpty(tweets)) {
@@ -287,7 +276,7 @@ export class CrawlManager {
       {
         tweets,
       },
-      postCfg,
+      postCfg
     );
   }
 }

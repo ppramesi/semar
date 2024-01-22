@@ -7,7 +7,7 @@ import pgPromise from "pg-promise";
 import { Client } from "langsmith";
 import { LangChainTracer } from "langchain/callbacks";
 import _ from "lodash";
-import { TweetSummarizer } from "./lc/chains/summarizer.js";
+// import { TweetSummarizer } from "./lc/chains/summarizer.js";
 import { ClassifierAggregator } from "./processors/classifier_aggregator/base.js";
 import { ZeroShotClassifierAggregator } from "./processors/classifier_aggregator/zero_shot.js";
 import { LLMClassifierAggregator } from "./processors/classifier_aggregator/llm.js";
@@ -77,11 +77,11 @@ const llm35 = new ChatOpenAI({
   temperature: 0.1,
 });
 
-const llm4 = new ChatOpenAI({
-  modelName: "gpt-4-1106-preview",
-  maxConcurrency: 5,
-  temperature: 0.1,
-});
+// const llm4 = new ChatOpenAI({
+//   modelName: "gpt-4-1106-preview",
+//   maxConcurrency: 5,
+//   temperature: 0.1,
+// });
 
 const db = new SemarPostgres({
   postgresConnectionOptions: await connectWithRetry(),
@@ -106,7 +106,7 @@ if (process.env.CLASSIFIER_AGGREGATOR === "zero-shot") {
 const server = new SemarHttpServer({
   db,
   baseLlm: llm35,
-  llms: new Map([[TweetSummarizer, llm4]]),
+  // llms: new Map([[TweetSummarizer, llm4]]),
   embeddings,
   port: parseInt(process.env.PROCESSOR_PORT!) ?? 42069,
   callbacks: modelCallbacks,
