@@ -1,5 +1,5 @@
 import { crawl } from "./crawl";
-import { ACCESS_TOKEN } from "./env";
+import { ACCESS_TOKEN } from "./utils/env";
 
 crawl({
   ACCESS_TOKEN: ACCESS_TOKEN,

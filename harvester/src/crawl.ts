@@ -9,7 +9,7 @@ import stealth from "puppeteer-extra-plugin-stealth";
 import { inputKeywords } from "./features/input-keywords";
 import { listenNetworkRequests } from "./features/listen-network-requests";
 import { calculateForRateLimit } from "./features/exponential-backoff";
-import { HEADLESS_MODE } from "./env";
+import { HEADLESS_MODE } from "./utils/env";
 import { TWITTER_SEARCH_ADVANCED_URL } from "./constants";
 import { LaunchOptions } from "@playwright/test";
 

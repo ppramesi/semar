@@ -3,6 +3,7 @@ import _ from "lodash";
 import { Tweet } from "../../types/tweet.js";
 import dotenv from "dotenv";
 import { BaseServiceCaller } from "./base.js";
+import { getServicesUrl } from "../../utils/env.js";
 
 dotenv.config();
 
@@ -14,31 +15,18 @@ interface RerankRequest {
 export class HttpServiceCaller extends BaseServiceCaller {
   harvesterUrl: URL;
   mlUrl?: URL;
-  constructor() {
-    super();
-    if (_.isNil(process.env.HARVESTER_URL)) {
-      throw new Error("HARVESTER_URL not set");
-    }
-    this.harvesterUrl = new URL(process.env.HARVESTER_URL as string);
-    this.harvesterUrl.port = process.env.HARVESTER_PORT as string;
-    if (!_.isEmpty(process.env.ML_URL)) {
-      this.mlUrl = new URL(process.env.ML_URL as string);
-      this.mlUrl.port = process.env.ML_PORT as string;
-    }
-  }
-
+  
   async zeroShotClassification(
     texts: string[],
     tags: string[],
   ): Promise<string[][]> {
-    if (
-      _.isNil(this.mlUrl) ||
-      process.env.ZERO_SHOT_CLASSIFY_TWEETS !== "true"
-    ) {
+    let zeroShotUrl: string;
+    try {
+      zeroShotUrl = getServicesUrl("zero-shot-classifier")
+    } catch (error) {
       return texts.map((_) => tags);
     }
 
-    this.mlUrl.pathname = "/classify";
     try {
       const postCfg: AxiosRequestConfig = {};
 
@@ -52,7 +40,7 @@ export class HttpServiceCaller extends BaseServiceCaller {
       }
 
       const response = await axios.post<{ status: string; result: string[][] }>(
-        this.mlUrl.toString(),
+        zeroShotUrl,
         {
           queries: texts,
           classes: tags,
@@ -71,10 +59,10 @@ export class HttpServiceCaller extends BaseServiceCaller {
     basePassage: string,
     queries: string[],
   ): Promise<number[]> {
-    if (
-      _.isNil(this.mlUrl) ||
-      process.env.RERANK_VECTOR_SEARCH_RESULTS !== "true"
-    ) {
+    let rerankerUrl: string;
+    try {
+      rerankerUrl = getServicesUrl("reranker")
+    } catch (error) {
       return queries.map((_, idx) => idx);
     }
 
@@ -82,8 +70,6 @@ export class HttpServiceCaller extends BaseServiceCaller {
       base_passage: basePassage,
       queries: queries,
     };
-
-    this.mlUrl.pathname = "/rerank";
 
     try {
       const postCfg: AxiosRequestConfig = {};
@@ -98,7 +84,7 @@ export class HttpServiceCaller extends BaseServiceCaller {
       }
 
       const response = await axios.post<{ status: string; result: number[] }>(
-        this.mlUrl.toString(),
+        rerankerUrl,
         requestData,
         postCfg,
       );
@@ -111,7 +97,6 @@ export class HttpServiceCaller extends BaseServiceCaller {
   }
 
   async searchRelevantTweets(keywords: string, fromDate: Date, toDate: Date) {
-    this.harvesterUrl.pathname = "/search-relevant-tweets";
     try {
       const postCfg: AxiosRequestConfig = {};
 
@@ -127,7 +112,7 @@ export class HttpServiceCaller extends BaseServiceCaller {
       const {
         data: { tweets },
       }: { data: { tweets: Tweet[] } } = await axios.post(
-        this.harvesterUrl.toString(),
+        getServicesUrl("harvester"),
         {
           searchTerms: keywords,
           fromDate: fromDate.toISOString(),

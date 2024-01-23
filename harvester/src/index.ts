@@ -9,16 +9,11 @@ config();
 async function run() {
   try {
     const period = 1;
-    const processorUrl = new URL(process.env.PROCESSOR_URL);
-    processorUrl.port = process.env.PROCESSOR_PORT ?? "";
-    const imageRecognitionUrl = new URL(process.env.IR_URL);
-    imageRecognitionUrl.port = process.env.IR_PORT ?? "";
+
     const crawlManager = new CrawlManager({
       accountsSource: process.env.TWITTER_ACCOUNTS_SOURCE as "env" | "db",
       period,
-      tweetCount: 20,
-      processorUrl: processorUrl.toString(),
-      imageRecognitionUrl: imageRecognitionUrl.toString(),
+      tweetCount: 20
     });
 
     const server = new Server({

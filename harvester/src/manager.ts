@@ -5,6 +5,7 @@ import authStoreInstance, { AuthStore } from "./auth-store";
 import { TweetMappedReturn } from "./types/tweets.types";
 import _ from "lodash";
 import { hashToUUID } from "./utils/hash";
+import { getServicesUrl } from "./utils/env";
 
 export type TweetCrawlerOutput = {
   id: string;
@@ -21,8 +22,6 @@ export type CrawlManagerConfig = {
   accountsSource: "env" | "db";
   period: number;
   tweetCount: number;
-  processorUrl: string;
-  imageRecognitionUrl: string;
 };
 
 function buildTweetUrl(user: string, id: string) {
@@ -35,39 +34,17 @@ function hoursBeforeRightMeow(num: number) {
   return new Date(new Date().getTime() - num * 1000 * 60 * 60);
 }
 
-function buildProcessTweetsUrl(baseUrl: string) {
-  const url = new URL(baseUrl);
-  url.pathname = "/process-tweets";
-  return url.toString();
-}
-
-function buildOcrUrl(baseUrl: string) {
-  const url = new URL(baseUrl);
-  url.pathname = "/ocr";
-  return url.toString();
-}
-
-function buildCaptioningUrl(baseUrl: string) {
-  const url = new URL(baseUrl);
-  url.pathname = "/caption";
-  return url.toString();
-}
-
 export class CrawlManager {
   authStore: AuthStore = authStoreInstance;
   accountsSource: "env" | "db";
   db: Database;
   period: number;
   tweetCount: number;
-  processorUrl: string;
-  imageRecognitionUrl: string;
   constructor(config: CrawlManagerConfig) {
     this.accountsSource = config.accountsSource;
     this.db = dbInstance;
     this.period = config.period;
     this.tweetCount = config.tweetCount;
-    this.processorUrl = config.processorUrl;
-    this.imageRecognitionUrl = config.imageRecognitionUrl;
   }
 
   async fetchAccounts() {
@@ -216,7 +193,7 @@ export class CrawlManager {
     }
 
     return axios.post(
-      buildCaptioningUrl(this.imageRecognitionUrl),
+      getServicesUrl("captioner"),
       {
         imageUrl,
       },
@@ -237,7 +214,7 @@ export class CrawlManager {
     }
 
     return axios.post(
-      buildOcrUrl(this.imageRecognitionUrl),
+      getServicesUrl("ocr"),
       {
         imageUrl,
       },
@@ -272,7 +249,7 @@ export class CrawlManager {
     }
 
     await axios.post(
-      buildProcessTweetsUrl(this.processorUrl),
+      getServicesUrl("processor"),
       {
         tweets,
       },

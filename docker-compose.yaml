@@ -49,17 +49,16 @@ services:
     env_file: 
       - ./harvester/.env
     environment:
-      PROCESSOR_URL: http://processor
-      PROCESSOR_PORT: ${PROCESSOR_PORT}
+      PROCESSOR_ENDPOINT: http://processor
       POSTGRES_HOST: db
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_PORT: ${POSTGRES_PORT}
       AUTH_TOKEN: ${AUTH_TOKEN}
-      IR_PORT: ${IR_PORT}
-      IR_URL: http://image-recognition
       USE_IR: false
+      # IR_PORT: ${IR_PORT}
+      # IR_URL: http://image-recognition
   
   processor:
     build:
@@ -78,15 +77,14 @@ services:
     env_file: 
       - ./processor/.env
     environment:
-      HARVESTER_URL: http://harvester
-      HARVESTER_PORT: ${HARVESTER_PORT}
+      HARVESTER_ENDPOINT: http://harvester
+      ZERO_SHOT_CLASSIFIER_ENDPOINT: http://ml-zero-shot-classifier
+      RERANKER_ENDPOINT: http://ml-reranker
       POSTGRES_HOST: db
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_PORT: ${POSTGRES_PORT}
-      ML_PORT: ${ML_PORT}
-      ML_URL: http://ml
       AUTH_TOKEN: ${AUTH_TOKEN}
       PROCESSOR_PORT: ${PROCESSOR_PORT}
       LANGSMITH_API_KEY: ${LANGSMITH_API_KEY}
@@ -148,49 +146,66 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_PORT: ${POSTGRES_PORT}
       POSTGRES_HOST: db
-      HARVESTER_URL: http://harvester
-      HARVESTER_PORT: ${HARVESTER_PORT}
-      PROCESSOR_URL: http://processor
-      PROCESSOR_PORT: ${PROCESSOR_PORT}
+      HARVESTER_SEARCH_ENDPOINT: http://harvester
+      PROCESSOR_ENDPOINT: http://processor/process-tweets
   
-  image-recognition:
+  ml-reranker:
     build:
-      context: ./image-recognition-${IR_VERSION}
-      dockerfile: ./docker/${IR_ENVIRONMENT}/Dockerfile
-    volumes:
-      - ./image-recognition-${IR_VERSION}:/app/src
-    ports:
-      - "${IR_PORT}:${IR_PORT}"
-    profiles:
-      - ir
-    env_file: 
-      - ./image-recognition-${IR_VERSION}/.env
-    environment:
-      IR_PORT: ${IR_PORT}
-      IR_URL: ${IR_URL}
-      AUTH_TOKEN: ${AUTH_TOKEN}
-      IR_ENVIRONMENT: ${IR_ENVIRONMENT}
-      IR_VERSION: ${IR_VERSION}
-  
-  ml:
-    build:
-      context: ./ml
+      context: ./ml-reranker
       dockerfile: ./docker/${ML_ENVIRONMENT}/Dockerfile
     volumes:
-      - ./ml:/app/src
+      - ./ml-reranker:/app/src
     ports:
-      - "${ML_PORT}:${ML_PORT}"
+      - "${RERANKER_PORT}:${RERANKER_PORT}"
     profiles:
       - all
       - ml
       - notdb
     env_file: 
-      - ./ml/.env
+      - ./ml-reranker/.env
     environment:
-      ML_PORT: ${ML_PORT}
-      ML_URL: ${ML_URL}
+      RERANKER_PORT: ${RERANKER_PORT}
+      RERANKER_URL: ${RERANKER_URL}
       AUTH_TOKEN: ${AUTH_TOKEN}
       ML_ENVIRONMENT: ${ML_ENVIRONMENT}
+  
+  ml-zero-shot-classifier:
+    build:
+      context: ./ml-zero-shot-classifier
+      dockerfile: ./docker/${ML_ENVIRONMENT}/Dockerfile
+    volumes:
+      - ./ml-zero-shot-classifier:/app/src
+    ports:
+      - "${ZERO_SHOT_CLASSIFIER_PORT}:${ZERO_SHOT_CLASSIFIER_PORT}"
+    profiles:
+      - all
+      - ml
+      - notdb
+    env_file: 
+      - ./ml-zero-shot-classifier/.env
+    environment:
+      ZERO_SHOT_CLASSIFIER_PORT: ${ZERO_SHOT_CLASSIFIER_PORT}
+      ZERO_SHOT_CLASSIFIER_URL: ${ZERO_SHOT_CLASSIFIER_URL}
+      AUTH_TOKEN: ${AUTH_TOKEN}
+      ML_ENVIRONMENT: ${ML_ENVIRONMENT}
+  
+  # image-recognition:
+  #   build:
+  #     context: ./image-recognition-${IR_VERSION}
+  #     dockerfile: ./docker/${IR_ENVIRONMENT}/Dockerfile
+  #   volumes:
+  #     - ./image-recognition-${IR_VERSION}:/app/src
+  #   ports:
+  #     - "${IR_PORT}:${IR_PORT}"
+  #   profiles:
+  #     - ir
+  #   env_file: 
+  #     - ./image-recognition-${IR_VERSION}/.env
+  #   environment:
+  #     IR_URL: ${IR_URL}
+  #     AUTH_TOKEN: ${AUTH_TOKEN}
+  #     IR_ENVIRONMENT: ${IR_ENVIRONMENT}
+  #     IR_VERSION: ${IR_VERSION}
 
 volumes:
   db-data:

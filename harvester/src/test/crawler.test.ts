@@ -8,16 +8,10 @@ test(
   "Test",
   async () => {
     const period = 1;
-    const processorUrl = new URL(process.env.PROCESSOR_URL);
-    processorUrl.port = process.env.PROCESSOR_PORT ?? "";
-    const ocrUrl = new URL(process.env.IR_URL);
-    ocrUrl.port = process.env.IR_PORT ?? "";
     const crawlManager = new CrawlManager({
       accountsSource: process.env.TWITTER_ACCOUNTS_SOURCE as "env" | "db",
       period,
-      tweetCount: 20,
-      processorUrl: processorUrl.toString(),
-      imageRecognitionUrl: ocrUrl.toString(),
+      tweetCount: 20
     });
 
     const anHourAgo = new Date(new Date().getTime() - 60 * 60 * 1000);
