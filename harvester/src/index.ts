@@ -13,7 +13,7 @@ async function run() {
     const crawlManager = new CrawlManager({
       accountsSource: process.env.TWITTER_ACCOUNTS_SOURCE as "env" | "db",
       period,
-      tweetCount: 20
+      tweetCount: 20,
     });
 
     const server = new Server({

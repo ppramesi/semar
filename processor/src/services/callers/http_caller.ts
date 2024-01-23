@@ -15,14 +15,14 @@ interface RerankRequest {
 export class HttpServiceCaller extends BaseServiceCaller {
   harvesterUrl: URL;
   mlUrl?: URL;
-  
+
   async zeroShotClassification(
     texts: string[],
     tags: string[],
   ): Promise<string[][]> {
     let zeroShotUrl: string;
     try {
-      zeroShotUrl = getServicesUrl("zero-shot-classifier")
+      zeroShotUrl = getServicesUrl("zero-shot-classifier");
     } catch (error) {
       return texts.map((_) => tags);
     }
@@ -61,7 +61,7 @@ export class HttpServiceCaller extends BaseServiceCaller {
   ): Promise<number[]> {
     let rerankerUrl: string;
     try {
-      rerankerUrl = getServicesUrl("reranker")
+      rerankerUrl = getServicesUrl("reranker");
     } catch (error) {
       return queries.map((_, idx) => idx);
     }
@@ -96,6 +96,34 @@ export class HttpServiceCaller extends BaseServiceCaller {
     }
   }
 
+  async scrapeTweets() {
+    try {
+      const postCfg: AxiosRequestConfig = {};
+
+      if (
+        !_.isNil(process.env.AUTH_TOKEN) &&
+        (process.env.AUTH_TOKEN as string).length > 0
+      ) {
+        postCfg.headers = {
+          "auth-token": process.env.AUTH_TOKEN,
+        };
+      }
+
+      const {
+        data: { tweets },
+      }: { data: { tweets: Tweet[] } } = await axios.post(
+        getServicesUrl("harvester-scrape"),
+        {},
+        postCfg,
+      );
+
+      return tweets;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  }
+
   async searchRelevantTweets(keywords: string, fromDate: Date, toDate: Date) {
     try {
       const postCfg: AxiosRequestConfig = {};
@@ -112,7 +140,7 @@ export class HttpServiceCaller extends BaseServiceCaller {
       const {
         data: { tweets },
       }: { data: { tweets: Tweet[] } } = await axios.post(
-        getServicesUrl("harvester"),
+        getServicesUrl("harvester-search"),
         {
           searchTerms: keywords,
           fromDate: fromDate.toISOString(),

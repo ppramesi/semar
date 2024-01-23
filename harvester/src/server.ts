@@ -38,12 +38,22 @@ export class Server {
       this.handleSearchTweets.bind(this),
     );
     this.app.post("/scrape-tweets", this.handleScrapeTweets.bind(this));
+    this.app.post("/start-crawl", this.handleStartScrape.bind(this));
   }
 
   private async handleScrapeTweets(
     _req: Request,
     res: Response,
   ): Promise<void> {
+    try {
+      const tweets = await this.crawlManager.crawlWithSearch();
+      res.status(200).json({ status: "success", tweets });
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  private async handleStartScrape(_req: Request, res: Response): Promise<void> {
     try {
       await this.crawlManager.run();
       res.status(200).json({ status: "success" });

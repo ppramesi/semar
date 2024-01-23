@@ -49,7 +49,7 @@ services:
     env_file: 
       - ./harvester/.env
     environment:
-      PROCESSOR_ENDPOINT: http://processor
+      PROCESSOR_PROCESS_TWEETS_ENDPOINT: http://processor/process-tweets/
       POSTGRES_HOST: db
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -77,9 +77,10 @@ services:
     env_file: 
       - ./processor/.env
     environment:
-      HARVESTER_ENDPOINT: http://harvester
-      ZERO_SHOT_CLASSIFIER_ENDPOINT: http://ml-zero-shot-classifier
-      RERANKER_ENDPOINT: http://ml-reranker
+      HARVESTER_SEARCH_ENDPOINT: http://harvester/search-relevant-tweets/
+      HARVESTER_SCRAPE_ENDPOINT: http://harvester/scrape-tweets/
+      ZERO_SHOT_CLASSIFIER_ENDPOINT: http://ml-zero-shot-classifier/
+      RERANKER_ENDPOINT: http://ml-reranker/
       POSTGRES_HOST: db
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -146,8 +147,10 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_PORT: ${POSTGRES_PORT}
       POSTGRES_HOST: db
-      HARVESTER_SEARCH_ENDPOINT: http://harvester
-      PROCESSOR_ENDPOINT: http://processor/process-tweets
+      HARVESTER_SEARCH_ENDPOINT: http://harvester/search-relevant-tweets/
+      HARVESTER_SCRAPE_ENDPOINT: http://harvester/scrape-tweets/
+      PROCESSOR_PROCESS_TWEETS_ENDPOINT: http://processor/process-tweets/
+      PROCESSOR_START_PIPELINE_ENDPOINT: http://processor/start-pipeline/
   
   ml-reranker:
     build:

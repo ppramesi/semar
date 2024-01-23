@@ -38,6 +38,18 @@ export class SemarHttpServer extends SemarServer {
   buildRoute(): void {
     this.app.use(buildAuthMiddleware(process.env.AUTH_TOKEN));
     this.app.use(express.json());
+    this.app.post("/start-pipeline", async (_req, res) => {
+      try {
+        const tweets = await this.serviceCaller.scrapeTweets();
+        await this.processTweets(tweets);
+        res.status(200).send({ status: "success" });
+        return;
+      } catch (error) {
+        console.error(error);
+        res.status(400).send({ status: "error", error });
+        return;
+      }
+    });
     this.app.post("/process-tweets", async (req, res) => {
       let tweets: Tweet[];
       const { tweets: rawTweets, ids } = req.body as {

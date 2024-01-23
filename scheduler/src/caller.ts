@@ -3,7 +3,7 @@ import _ from "lodash";
 import { getServicesUrl } from "./utils/env.js";
 
 export class Caller {
-  async callScrapeTweets(): Promise<void> {
+  async callStartPipeline(): Promise<void> {
     const postCfg: AxiosRequestConfig = {};
 
     if (
@@ -15,7 +15,8 @@ export class Caller {
       };
     }
 
-    await axios.post(getServicesUrl("harvester"), {}, postCfg);
+    console.log(`start pipeline ${getServicesUrl("processor-start-pipeline")}`);
+    await axios.post(getServicesUrl("processor-start-pipeline"), {}, postCfg);
   }
 }
 

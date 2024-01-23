@@ -8,6 +8,9 @@
     "scheduler",
     "image-recognition-v1"
   ],
+  "scripts": {
+    "format:all": "yarn workspace processor run format && yarn workspace harvester run format && yarn workspace scheduler run format"
+  },
   "description": "news aggregator",
   "main": "index.js",
   "author": "Priya X. Pramesi",

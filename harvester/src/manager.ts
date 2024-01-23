@@ -77,7 +77,7 @@ export class CrawlManager {
     toDate: Date,
     tweetCount?: number,
     tab: "LATEST" | "TOP" = "LATEST",
-    processImage: boolean = false
+    processImage: boolean = false,
   ): Promise<TweetCrawlerOutput[]> {
     let accessToken = await this.authStore.getAuth();
     let data: TweetMappedReturn[];
@@ -121,7 +121,7 @@ export class CrawlManager {
                     if (
                       !_.isNil(m.media_url_https) &&
                       (m.media_url_https as string).includes(
-                        "pbs.twimg.com/media"
+                        "pbs.twimg.com/media",
                       )
                     ) {
                       try {
@@ -140,7 +140,7 @@ export class CrawlManager {
                       }
                     }
                     return null;
-                  })
+                  }),
                 )
               ).filter((v) => !_.isNil(v)) ?? [];
             return {
@@ -158,7 +158,7 @@ export class CrawlManager {
               url: tweetUrl,
             };
           }
-        })
+        }),
       );
     } else {
       return data.map((tweet) => {
@@ -197,7 +197,7 @@ export class CrawlManager {
       {
         imageUrl,
       },
-      postCfg
+      postCfg,
     );
   }
 
@@ -218,8 +218,22 @@ export class CrawlManager {
       {
         imageUrl,
       },
-      postCfg
+      postCfg,
     );
+  }
+
+  async crawlWithSearch() {
+    const searchTerms = this.buildSearchTerms(await this.fetchAccounts());
+    const tweets = await this.crawl(
+      searchTerms,
+      hoursBeforeRightMeow(this.period),
+      new Date(),
+      5,
+      "TOP",
+      process.env.USE_IR === "true",
+    );
+
+    return tweets;
   }
 
   async run() {
@@ -230,7 +244,7 @@ export class CrawlManager {
       new Date(),
       5,
       "TOP",
-      process.env.USE_IR === "true"
+      process.env.USE_IR === "true",
     );
 
     if (_.isEmpty(tweets)) {
@@ -249,11 +263,11 @@ export class CrawlManager {
     }
 
     await axios.post(
-      getServicesUrl("processor"),
+      getServicesUrl("processor-process-tweets"),
       {
         tweets,
       },
-      postCfg
+      postCfg,
     );
   }
 }

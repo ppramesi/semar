@@ -52,10 +52,12 @@ export class Scheduler {
       id,
       async () => {
         if (!this.paused) {
-          return this.caller.callScrapeTweets();
+          return this.caller.callStartPipeline();
         }
       },
       (err: Error) => {
+        this.job.stop();
+        this.paused = true;
         console.error(err);
       },
     );
