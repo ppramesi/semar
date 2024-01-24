@@ -1,0 +1,267 @@
+swagger: '2.0'
+info:
+  title: ${API_ID}
+  description: Semar gateway API
+  version: 1.0.0
+schemes:
+- https
+produces:
+- application/json
+x-google-backend:
+  address: ${APP_URL}
+
+paths:
+  /search-relevant-tweets:
+    post:
+      summary: "Endpoint for searching relevant tweets"
+      x-google-backend:
+        address: "https://${HARVESTER_URL}/search-relevant-tweets/"
+        path_translation: CONSTANT_ADDRESS
+      parameters:
+        - in: header
+          name: auth-token
+          required: true
+          type: string
+      responses:
+        '200':
+          description: "Successful response"
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+              tweets:
+                type: array
+                items:
+                  $ref: '#/definitions/Tweet'
+        '400':
+          description: "Bad Request"
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+              error:
+                type: string
+
+  /scrape-tweets:
+    post:
+      summary: "Endpoint for scraping tweets"
+      x-google-backend:
+        address: "https://${HARVESTER_URL}/scrape-tweets/"
+        path_translation: CONSTANT_ADDRESS
+      parameters:
+        - in: header
+          name: auth-token
+          required: true
+          type: string
+      responses:
+        '200':
+          description: "Successful response"
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+              tweets:
+                type: array
+                items:
+                  $ref: '#/definitions/Tweet'
+        '400':
+          description: "Bad Request"
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+              error:
+                type: string
+
+  /process-tweets:
+    post:
+      summary: "Endpoint for processing tweets"
+      x-google-backend:
+        address: "https://${PROCESSOR_URL}/process-tweets/"
+        path_translation: CONSTANT_ADDRESS
+      parameters:
+        - in: header
+          name: auth-token
+          required: true
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                tweets:
+                  type: array
+                  items:
+                    $ref: '#/definitions/Tweet'
+                ids:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '200':
+          description: "Successful processing"
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+        '400':
+          description: "Bad Request"
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+              error:
+                type: string
+
+  /start-pipeline:
+    post:
+      summary: "Endpoint to start the pipeline"
+      x-google-backend:
+        address: "https://${PROCESSOR_URL}/start-pipeline/"
+        path_translation: CONSTANT_ADDRESS
+      parameters:
+        - in: header
+          name: auth-token
+          required: true
+          type: string
+      responses:
+        '200':
+          description: "Pipeline started successfully"
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+        '400':
+          description: "Bad Request"
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+              error:
+                type: string
+
+  /rerank:
+    post:
+      summary: "Endpoint for re-ranking"
+      x-google-backend:
+        address: "https://${RERANKER_URL}/"
+        path_translation: CONSTANT_ADDRESS
+      parameters:
+        - in: header
+          name: auth-token
+          required: true
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                base_passage:
+                  type: string
+                queries:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '200':
+          description: "Successful re-ranking"
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+              result:
+                type: array
+                items:
+                  type: object
+
+  /classify:
+    post:
+      summary: "Endpoint for zero-shot classification"
+      x-google-backend:
+        address: "https://${CLASSIFIER_URL}/"
+        path_translation: CONSTANT_ADDRESS
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                queries:
+                  type: array
+                  items:
+                    type: string
+                classes:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '200':
+          description: "Successful classification"
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+              result:
+                type: array
+                items:
+                  type: object
+            # Define your response schema here
+
+  # Add more paths for other services like ml-reranker and ml-zero-shot-classifier
+definitions:
+  Tweet:
+    type: object
+    properties:
+      id:
+        type: string
+      text:
+        type: string
+      date:
+        type: string
+        format: date-time
+      url:
+        type: string
+      tags:
+        type: array
+        items:
+          type: string
+      embedding:
+        type: array
+        items:
+          type: number
+      media:
+        type: array
+        items:
+          $ref: '#/definitions/Media'
+    required:
+      - id
+      - text
+      - date
+      - url
+
+  Media:
+    type: object
+    properties:
+      text:
+        type: array
+        items:
+          type: string
+      caption:
+        type: array
+        items:
+          type: string

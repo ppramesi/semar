@@ -1,5 +1,5 @@
 # Build dependencies
-FROM node:18 as builder
+# FROM node:18 as builder
 FROM mcr.microsoft.com/playwright:focal
 WORKDIR /app
 ENV PATH /app/node_modules/.bin:$PATH

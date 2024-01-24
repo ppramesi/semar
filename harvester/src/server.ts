@@ -48,8 +48,11 @@ export class Server {
     try {
       const tweets = await this.crawlManager.crawlWithSearch();
       res.status(200).json({ status: "success", tweets });
+      return;
     } catch (error) {
       console.error(error);
+      res.status(400).json({ status: "error", error: error.message });
+      return;
     }
   }
 
@@ -57,8 +60,10 @@ export class Server {
     try {
       await this.crawlManager.run();
       res.status(200).json({ status: "success" });
+      return;
     } catch (error) {
       res.status(400).json({ status: "error", error: error.message });
+      return;
     }
   }
 
