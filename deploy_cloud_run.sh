@@ -42,33 +42,33 @@ fi
 
 # Use specified .env file if provided
 if [ ! -z "$env_file_arg" ]; then
-  env_file="$service_dir/$env_file_arg"
-  secrets_env_file="$service_dir/$env_file_arg.secrets"
+    env_file="$service_dir/$env_file_arg"
+    secrets_env_file="$service_dir/$env_file_arg.secrets"
 else
-  env_file="$service_dir/.env.cloudrun"
-  secrets_env_file="$service_dir/.env.cloudrun.secrets"
+    env_file="$service_dir/.env.cloudrun"
+    secrets_env_file="$service_dir/.env.cloudrun.secrets"
 fi
 
 # Load environment variables from .env file
 set -o allexport
 if [ -f "$env_file" ]; then
-  source $env_file
+    source $env_file
 else
-  echo "Error: .env.cloudrun file not found in the service directory."
-  exit 1
+    echo "Error: .env.cloudrun file not found in the service directory."
+    exit 1
 fi
 
 if [ -f "$secrets_env_file" ]; then
-  source $secrets_env_file
+    source $secrets_env_file
 else
-  echo "Error: .env.cloudrun.secrets file not found in the service directory."
-  exit 1
+    echo "Error: .env.cloudrun.secrets file not found in the service directory."
+    exit 1
 fi
 set +o allexport
 
 # Load ML_ENVIRONMENT from the root .env file if it exists
 if [ -f "./.env.cloudrun" ]; then
-  source "./.env.cloudrun"
+    source "./.env.cloudrun"
 fi
 
 # Check for essential environment variables
@@ -81,6 +81,13 @@ if [ "$mode" != "development" ] && [ "$mode" != "staging" ] && [ "$mode" != "pro
     echo "Error: Invalid mode. Allowed values: development, staging, production"
     exit 1
 fi
+
+declare -A services=(
+    ["harvester"]="HARVESTER_SEARCH_ENDPOINT:/search-relevant-tweets HARVESTER_SCRAPE_ENDPOINT:/scrape-tweets"
+    ["processor"]="PROCESSOR_PROCESS_TWEETS_ENDPOINT:/process-tweets PROCESSOR_START_PIPELINE_ENDPOINT:/start-pipeline"
+    ["ml-zero-shot-classifier"]="ZERO_SHOT_CLASSIFIER_ENDPOINT:/"
+    ["ml-reranker"]="RERANKER_ENDPOINT:/"
+)
 
 dockerfile_path="$service_dir"
 # Handle special case for ml-reranker and ml-zero-shot-classifier
@@ -115,9 +122,18 @@ if [[ $version =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
         --region asia-southeast2 \
         --project "${GCP_PROJECT_ID}"
 
-    service_url=$(curl -X GET -H "Authorization: Bearer $(gcloud auth print-access-token)"  https://asia-southeast2-run.googleapis.com/apis/serving.knative.dev/v1/namespaces/${GCP_PROJECT_ID}/services/${service} | grep url)
+    service_url=$(curl -X GET -H "Authorization: Bearer $(gcloud auth print-access-token)" "https://asia-southeast2-run.googleapis.com/apis/serving.knative.dev/v1/namespaces/${GCP_PROJECT_ID}/services/${service}" | grep url)
 
-    echo "Service ${service}: ${service_url}"
+    extracted_url=$(echo "$service_url" | grep -oP 'https://[a-zA-Z0-9_.-]+\.run\.app')
+
+    # Loop through each endpoint variable for the service
+    for entry in ${services[$service]}; do
+        env_var="${entry%%:*}"   # Extract the environment variable name
+        path="${entry##*:}"      # Extract the path
+
+        # Update the .env file
+        sed -i "s~^$env_var=.*~$env_var=$extracted_url$path~" .env.cloudrun
+    done
 
     echo "$version - $(date +'%Y-%m-%d %H:%M:%S')" >> "$service_dir/.versions"
 else
