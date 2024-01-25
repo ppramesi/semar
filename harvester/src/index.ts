@@ -1,5 +1,6 @@
 import { config } from "dotenv";
 // import { Scheduler, createRecurrenceRule } from "./scheduler";
+import dbInstance from "./db";
 import { CrawlManager } from "./manager";
 import _ from "lodash";
 import { Server } from "./server";
@@ -20,6 +21,10 @@ async function run() {
       crawlManager,
     });
     server.listen(process.env.HARVESTER_PORT ?? 2222);
+    process.on('SIGTERM', async () => {
+      await dbInstance.disconnect();
+      process.exit(0);
+    });
   } catch (error) {
     console.error(error);
   }

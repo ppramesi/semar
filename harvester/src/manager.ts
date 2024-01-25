@@ -235,39 +235,4 @@ export class CrawlManager {
 
     return tweets;
   }
-
-  async run() {
-    const searchTerms = this.buildSearchTerms(await this.fetchAccounts());
-    const tweets = await this.crawl(
-      searchTerms,
-      hoursBeforeRightMeow(this.period),
-      new Date(),
-      5,
-      "TOP",
-      process.env.USE_IR === "true",
-    );
-
-    if (_.isEmpty(tweets)) {
-      return;
-    }
-
-    const postCfg: AxiosRequestConfig = {};
-
-    if (
-      !_.isNil(process.env.AUTH_TOKEN) &&
-      (process.env.AUTH_TOKEN as string).length > 0
-    ) {
-      postCfg.headers = {
-        "auth-token": process.env.AUTH_TOKEN,
-      };
-    }
-
-    await axios.post(
-      getServicesUrl("processor-process-tweets"),
-      {
-        tweets,
-      },
-      postCfg,
-    );
-  }
 }

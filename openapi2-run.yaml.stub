@@ -1,21 +1,19 @@
 swagger: '2.0'
 info:
-  title: ${API_ID}
+  title: ${GCP_PROJECT_ID}-api-gateway
   description: Semar gateway API
   version: 1.0.0
 schemes:
-- https
+  - https
 produces:
-- application/json
-x-google-backend:
-  address: ${APP_URL}
+  - application/json
 
 paths:
   /search-relevant-tweets:
     post:
-      summary: "Endpoint for searching relevant tweets"
+      summary: Endpoint for searching relevant tweets
       x-google-backend:
-        address: "https://${HARVESTER_URL}/search-relevant-tweets/"
+        address: ${HARVESTER_SEARCH_ENDPOINT}
         path_translation: CONSTANT_ADDRESS
       parameters:
         - in: header
@@ -24,7 +22,7 @@ paths:
           type: string
       responses:
         '200':
-          description: "Successful response"
+          description: Successful response
           schema:
             type: object
             properties:
@@ -35,7 +33,7 @@ paths:
                 items:
                   $ref: '#/definitions/Tweet'
         '400':
-          description: "Bad Request"
+          description: Bad Request
           schema:
             type: object
             properties:
@@ -46,9 +44,9 @@ paths:
 
   /scrape-tweets:
     post:
-      summary: "Endpoint for scraping tweets"
+      summary: Endpoint for scraping tweets
       x-google-backend:
-        address: "https://${HARVESTER_URL}/scrape-tweets/"
+        address: ${HARVESTER_SCRAPE_ENDPOINT}
         path_translation: CONSTANT_ADDRESS
       parameters:
         - in: header
@@ -57,7 +55,7 @@ paths:
           type: string
       responses:
         '200':
-          description: "Successful response"
+          description: Successful response
           schema:
             type: object
             properties:
@@ -68,7 +66,7 @@ paths:
                 items:
                   $ref: '#/definitions/Tweet'
         '400':
-          description: "Bad Request"
+          description: Bad Request
           schema:
             type: object
             properties:
@@ -79,9 +77,9 @@ paths:
 
   /process-tweets:
     post:
-      summary: "Endpoint for processing tweets"
+      summary: Endpoint for processing tweets
       x-google-backend:
-        address: "https://${PROCESSOR_URL}/process-tweets/"
+        address: ${PROCESSOR_PROCESS_TWEETS_ENDPOINT}
         path_translation: CONSTANT_ADDRESS
       parameters:
         - in: header
@@ -105,14 +103,14 @@ paths:
                     type: string
       responses:
         '200':
-          description: "Successful processing"
+          description: Successful processing
           schema:
             type: object
             properties:
               status:
                 type: string
         '400':
-          description: "Bad Request"
+          description: Bad Request
           schema:
             type: object
             properties:
@@ -123,9 +121,9 @@ paths:
 
   /start-pipeline:
     post:
-      summary: "Endpoint to start the pipeline"
+      summary: Endpoint to start the pipeline
       x-google-backend:
-        address: "https://${PROCESSOR_URL}/start-pipeline/"
+        address: ${PROCESSOR_START_PIPELINE_ENDPOINT}
         path_translation: CONSTANT_ADDRESS
       parameters:
         - in: header
@@ -134,14 +132,14 @@ paths:
           type: string
       responses:
         '200':
-          description: "Pipeline started successfully"
+          description: Pipeline started successfully
           schema:
             type: object
             properties:
               status:
                 type: string
         '400':
-          description: "Bad Request"
+          description: Bad Request
           schema:
             type: object
             properties:
@@ -152,9 +150,9 @@ paths:
 
   /rerank:
     post:
-      summary: "Endpoint for re-ranking"
+      summary: Endpoint for re-ranking
       x-google-backend:
-        address: "https://${RERANKER_URL}/"
+        address: ${RERANKER_ENDPOINT}
         path_translation: CONSTANT_ADDRESS
       parameters:
         - in: header
@@ -176,7 +174,7 @@ paths:
                     type: string
       responses:
         '200':
-          description: "Successful re-ranking"
+          description: Successful re-ranking
           schema:
             type: object
             properties:
@@ -189,9 +187,9 @@ paths:
 
   /classify:
     post:
-      summary: "Endpoint for zero-shot classification"
+      summary: Endpoint for zero-shot classification
       x-google-backend:
-        address: "https://${CLASSIFIER_URL}/"
+        address: ${ZERO_SHOT_CLASSIFIER_ENDPOINT}
         path_translation: CONSTANT_ADDRESS
       requestBody:
         required: true
@@ -210,7 +208,7 @@ paths:
                     type: string
       responses:
         '200':
-          description: "Successful classification"
+          description: Successful classification
           schema:
             type: object
             properties:

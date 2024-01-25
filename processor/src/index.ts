@@ -69,18 +69,22 @@ if (
   modelCallbacks.push(tracer);
 }
 
-const embeddings = new OpenAIEmbeddings();
+const embeddings = new OpenAIEmbeddings({
+  openAIApiKey: process.env.OPENAI_API_KEY,
+});
 
 const llm35 = new ChatOpenAI({
   modelName: "gpt-3.5-turbo-1106",
   maxConcurrency: 5,
   temperature: 0.1,
+  openAIApiKey: process.env.OPENAI_API_KEY,
 });
 
 // const llm4 = new ChatOpenAI({
 //   modelName: "gpt-4-1106-preview",
 //   maxConcurrency: 5,
 //   temperature: 0.1,
+//   openAIApiKey: process.env.OPENAI_API_KEY,
 // });
 
 const db = new SemarPostgres({
@@ -111,6 +115,10 @@ const server = new SemarHttpServer({
   port: parseInt(process.env.PROCESSOR_PORT!) ?? 42069,
   callbacks: modelCallbacks,
   classifierAggregator,
+});
+process.on('SIGTERM', async () => {
+  await db.disconnect();
+  process.exit(0);
 });
 
 server.buildRoute();

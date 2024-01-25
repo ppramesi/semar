@@ -27,6 +27,10 @@ export class Database {
     this.pg = await this.connectWithRetry();
   }
 
+  async disconnect(){
+    await this.pg.$pool.end();
+  }
+
   async connectWithRetry(maxRetries: number = 5, delayMillis: number = 5000) {
     let retries = maxRetries;
     const pgp = pgPromise();
