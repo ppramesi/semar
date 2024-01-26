@@ -82,13 +82,6 @@ if [ "$mode" != "development" ] && [ "$mode" != "staging" ] && [ "$mode" != "pro
     exit 1
 fi
 
-declare -A services=(
-    ["harvester"]="HARVESTER_SEARCH_ENDPOINT:/search-relevant-tweets HARVESTER_SCRAPE_ENDPOINT:/scrape-tweets"
-    ["processor"]="PROCESSOR_PROCESS_TWEETS_ENDPOINT:/process-tweets PROCESSOR_START_PIPELINE_ENDPOINT:/start-pipeline"
-    ["ml-zero-shot-classifier"]="ZERO_SHOT_CLASSIFIER_ENDPOINT:/"
-    ["ml-reranker"]="RERANKER_ENDPOINT:/"
-)
-
 dockerfile_path="$service_dir"
 # Handle special case for ml-reranker and ml-zero-shot-classifier
 if [[ "$service" == "ml-reranker" ]] || [[ "$service" == "ml-zero-shot-classifier" ]]; then
@@ -114,7 +107,7 @@ if [[ $version =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
         --max-instances 3 \
         --image asia.gcr.io/${GCP_PROJECT_ID}/${service}:${version} \
         --update-env-vars "^@@^$env_vars" \
-        --update-secrets "$secret_vars" \
+        --update-secrets "$secret_env_vars" \
         --service-account "${SERVICE_ACCOUNT}" \
         --port 8080 \
         --concurrency 80 \
@@ -126,14 +119,7 @@ if [[ $version =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
 
     extracted_url=$(echo "$service_url" | grep -oP 'https://[a-zA-Z0-9_.-]+\.run\.app')
 
-    # Loop through each endpoint variable for the service
-    for entry in ${services[$service]}; do
-        env_var="${entry%%:*}"   # Extract the environment variable name
-        path="${entry##*:}"      # Extract the path
-
-        # Update the .env file
-        sed -i "s~^$env_var=.*~$env_var=$extracted_url$path~" .env.cloudrun
-    done
+    echo $extracted_url
 
     echo "$version - $(date +'%Y-%m-%d %H:%M:%S')" >> "$service_dir/.versions"
 else

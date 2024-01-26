@@ -54,7 +54,7 @@ export class Scheduler {
       id,
       async () => {
         if (!this.paused) {
-          return this.manager.run();
+          return this.manager.crawlWithSearch();
         }
       },
       (err: Error) => {
