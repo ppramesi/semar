@@ -28,6 +28,10 @@ increment_version() {
     fi
 }
 
+escape_special_chars() {
+    echo "$1" | sed 's/[&/\]/\\&/g'
+}
+
 # Check for version or increment from .versions
 if [ -z "$version" ]; then
     if [ -f "${service_dir}/.versions" ]; then
@@ -89,11 +93,18 @@ if [[ "$service" == "ml-reranker" ]] || [[ "$service" == "ml-zero-shot-classifie
         echo "Error: ML_ENVIRONMENT is not set. It must be either 'cpu' or 'gpu'."
         exit 1
     fi
-    dockerfile_path="$service_dir/$ML_ENVIRONMENT"
+    dockerfile_path="$service_dir/docker/$ML_ENVIRONMENT"
 fi
 
+declare -A services=(
+    ["harvester"]="HARVESTER_SEARCH_ENDPOINT:/search-relevant-tweets HARVESTER_SCRAPE_ENDPOINT:/scrape-tweets"
+    ["processor"]="PROCESSOR_PROCESS_TWEETS_ENDPOINT:/process-tweets PROCESSOR_START_PIPELINE_ENDPOINT:/start-pipeline"
+    ["ml-zero-shot-classifier"]="ZERO_SHOT_CLASSIFIER_ENDPOINT:/"
+    ["ml-reranker"]="RERANKER_ENDPOINT:/"
+)
+
 if [[ $version =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-    docker build -t asia.gcr.io/${GCP_PROJECT_ID}/${service}:${version} "$dockerfile_path"
+    docker build -t asia.gcr.io/${GCP_PROJECT_ID}/${service}:${version} -f "$dockerfile_path/Dockerfile" "$service_dir"
     docker push asia.gcr.io/${GCP_PROJECT_ID}/${service}:${version}
 
     # Construct the env-vars string from the .env file
@@ -103,6 +114,7 @@ if [[ $version =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
     gcloud run deploy \
         --memory 4G \
         --cpu 2 \
+        --timeout 3600 \
         --execution-environment gen2 \
         --max-instances 3 \
         --image asia.gcr.io/${GCP_PROJECT_ID}/${service}:${version} \
@@ -117,9 +129,21 @@ if [[ $version =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
 
     service_url=$(curl -X GET -H "Authorization: Bearer $(gcloud auth print-access-token)" "https://asia-southeast2-run.googleapis.com/apis/serving.knative.dev/v1/namespaces/${GCP_PROJECT_ID}/services/${service}" | grep url)
 
-    extracted_url=$(echo "$service_url" | grep -oP 'https://[a-zA-Z0-9_.-]+\.run\.app')
+    extracted_url=$(echo "$service_url" | grep -oP 'https://[a-zA-Z0-9_.-]+\.run\.app')/
 
-    echo $extracted_url
+    # Loop through each endpoint variable for the service
+    for entry in ${services[$service]}; do
+        env_var="${entry%%:*}"   # Extract the environment variable name
+        path="${entry##*:}"      # Extract the path
+
+        echo "Updating $env_var to $extracted_url$path"
+
+        # Inside the loop, escape the URL
+        escaped_url=$(escape_special_chars "$extracted_url$path")
+
+        # Update the .env file
+        sed -i "s~^$env_var=.*~$env_var=$escaped_url~" .env.cloudrun
+    done
 
     echo "$version - $(date +'%Y-%m-%d %H:%M:%S')" >> "$service_dir/.versions"
 else

@@ -1,0 +1,9 @@
+/node_modules/
+.env
+.env.*
+.versions
+!.env.example
+!.env.*.example
+/dist/
+/test/
+openapi2-run.yaml

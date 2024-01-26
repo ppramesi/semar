@@ -12,6 +12,7 @@ paths:
   /search-relevant-tweets:
     post:
       summary: Endpoint for searching relevant tweets
+      operationId: searchRelevantTweets
       x-google-backend:
         address: ${HARVESTER_SEARCH_ENDPOINT}
         path_translation: CONSTANT_ADDRESS
@@ -45,6 +46,7 @@ paths:
   /scrape-tweets:
     post:
       summary: Endpoint for scraping tweets
+      operationId: scrapeTweets
       x-google-backend:
         address: ${HARVESTER_SCRAPE_ENDPOINT}
         path_translation: CONSTANT_ADDRESS
@@ -78,6 +80,7 @@ paths:
   /process-tweets:
     post:
       summary: Endpoint for processing tweets
+      operationId: processTweets
       x-google-backend:
         address: ${PROCESSOR_PROCESS_TWEETS_ENDPOINT}
         path_translation: CONSTANT_ADDRESS
@@ -86,21 +89,17 @@ paths:
           name: auth-token
           required: true
           type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                tweets:
-                  type: array
-                  items:
-                    $ref: '#/definitions/Tweet'
-                ids:
-                  type: array
-                  items:
-                    type: string
+        - in: body
+          name: body
+          description: List of tweets to process
+          required: true
+          schema:
+            type: object
+            properties:
+              tweets:
+                type: array
+                items:
+                  $ref: '#/definitions/Tweet'
       responses:
         '200':
           description: Successful processing
@@ -122,6 +121,7 @@ paths:
   /start-pipeline:
     post:
       summary: Endpoint to start the pipeline
+      operationId: startPipeline
       x-google-backend:
         address: ${PROCESSOR_START_PIPELINE_ENDPOINT}
         path_translation: CONSTANT_ADDRESS
@@ -151,6 +151,7 @@ paths:
   /rerank:
     post:
       summary: Endpoint for re-ranking
+      operationId: rerank
       x-google-backend:
         address: ${RERANKER_ENDPOINT}
         path_translation: CONSTANT_ADDRESS
@@ -159,19 +160,19 @@ paths:
           name: auth-token
           required: true
           type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                base_passage:
+        - in: body
+          name: body
+          description: List of tweets to re-rank
+          required: true
+          schema:
+            type: object
+            properties:
+              base_passage:
+                type: string
+              queries:
+                type: array
+                items:
                   type: string
-                queries:
-                  type: array
-                  items:
-                    type: string
       responses:
         '200':
           description: Successful re-ranking
@@ -188,24 +189,30 @@ paths:
   /classify:
     post:
       summary: Endpoint for zero-shot classification
+      operationId: classify
       x-google-backend:
         address: ${ZERO_SHOT_CLASSIFIER_ENDPOINT}
         path_translation: CONSTANT_ADDRESS
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                queries:
-                  type: array
-                  items:
-                    type: string
-                classes:
-                  type: array
-                  items:
-                    type: string
+      parameters:
+        - in: header
+          name: auth-token
+          required: true
+          type: string
+        - in: body
+          name: body
+          description: List of tweets to classify
+          required: true
+          schema:
+            type: object
+            properties:
+              queries:
+                type: array
+                items:
+                  type: string
+              classes:
+                type: array
+                items:
+                  type: string
       responses:
         '200':
           description: Successful classification
@@ -218,7 +225,6 @@ paths:
                 type: array
                 items:
                   type: object
-            # Define your response schema here
 
   # Add more paths for other services like ml-reranker and ml-zero-shot-classifier
 definitions:

@@ -6,6 +6,7 @@
     "processor",
     "harvester",
     "scheduler",
+    "invoker",
     "image-recognition-v1"
   ],
   "scripts": {
