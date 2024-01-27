@@ -5,6 +5,8 @@ mode=${2:-development}
 env_file_arg=${3:-.env.cloudrun}
 version=${4}
 
+set -e
+
 if [ -z "$service" ]; then
     echo "Error: No service specified. Usage: ./deploy.sh [service] [mode] [env_file] [version]"
     exit 1

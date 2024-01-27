@@ -1,7 +1,7 @@
 {
   "name": "invoker",
   "version": "0.0.1",
-  "main": "index.js",
+  "main": "./dist/index.js",
   "license": "MIT",
   "type": "module",
   "author": {
@@ -30,8 +30,8 @@
   },
   "scripts": {
     "format": "prettier --write \"src\"",
-    "start": "node ./dist/index.js",
-    "dev": "npx tsx src/dev.ts",
-    "build": "tsc"
+    "start": "functions-framework --target=v2 --source=dist/",
+    "build": "tsc",
+    "gcp-build": "npm run build"
   }
 }
