@@ -7,7 +7,7 @@
 set -e
 
 set -o allexport
-if [ -f ".env.invoker" ]; then
+if [ -f "./invoker/.env" ]; then
     source .env.invoker
 else
     echo "Error: .env.cloudrun file not found in the service directory."
@@ -15,7 +15,7 @@ else
 fi
 
 env_vars=$(awk -F '=' 'NF==2 && $2!="" { gsub(",", "\\,", $2); if (env_vars != "") env_vars = env_vars "@@"; env_vars = env_vars $1 "=" $2 } END {print env_vars}' .env.invoker)
-secret_env_vars=$(awk -F '=' 'NF==2 && $2!="" { if (secret_vars != "") secret_vars = secret_vars ","; secret_vars = secret_vars $1 "=" $1 ":" $2 } END {print secret_vars}' .env.invoker.secrets)
+secret_env_vars=$(awk -F '=' 'NF==2 && $2!="" { if (secret_vars != "") secret_vars = secret_vars ","; secret_vars = secret_vars $1 "=" $1 ":" $2 } END {print secret_vars}' './invoker/.env.secrets')
 
 yarn workspace invoker run build
 
