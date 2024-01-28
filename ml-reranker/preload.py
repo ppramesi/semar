@@ -1,4 +1,8 @@
-from transformers import AutoTokenizer, AutoModelForSequenceClassification
+from sentence_transformers import CrossEncoder
+import os
 
-AutoModelForSequenceClassification.from_pretrained('cross-encoder/ms-marco-MiniLM-L-12-v2')
-AutoTokenizer.from_pretrained('cross-encoder/ms-marco-MiniLM-L-12-v2')
+if not os.path.exists("./model"):
+    os.makedirs("./model")
+
+model = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-12-v2')
+model.save_pretrained("./model")

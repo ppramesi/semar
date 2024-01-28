@@ -2,11 +2,12 @@ from sentence_transformers import CrossEncoder
 import asyncio
 from typing import List
 from processors.base import Processor  # Importing Processor from base.py
+import os
 
 class Reranker(Processor):
     def __init__(self):
         super().__init__()
-        self.model = CrossEncoder("cross-encoder/ms-marco-MiniLM-L-12-v2")
+        self.model = CrossEncoder("./model")
 
     async def rerank(self, base_passage: str, queries: List[str]):
         print("Reranking: " + str(queries) + " with base passage: " + str(base_passage))

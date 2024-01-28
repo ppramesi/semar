@@ -6,7 +6,7 @@ from processors.base import Processor  # Importing Processor from base.py
 class ZeroShotClassifier(Processor):
     def __init__(self, threshold=0.75):
         super().__init__()
-        self.model = pipeline("zero-shot-classification", model="MoritzLaurer/deberta-v3-large-zeroshot-v1.1-all-33")
+        self.model = pipeline("zero-shot-classification", model="./model")
         self.threshold = threshold
 
     async def classify(self, queries: List[str], classes: List[str]) -> List[Dict[str, List[str]]]:

@@ -33,7 +33,7 @@ COPY . .
 
 # Preload the model
 # Make sure this step is after copying your application code if preload.py is part of it
-RUN python preload.py
+RUN python3 preload.py
 
 # Define environment variable
 ENV NAME World
