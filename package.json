@@ -7,7 +7,8 @@
     "harvester",
     "scheduler",
     "invoker",
-    "image-recognition-v1"
+    "image-recognition-v1",
+    "search-engine"
   ],
   "scripts": {
     "format:all": "yarn workspace processor run format && yarn workspace harvester run format && yarn workspace scheduler run format"

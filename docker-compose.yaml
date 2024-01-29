@@ -59,6 +59,30 @@ services:
       USE_IR: false
       # IR_PORT: ${IR_PORT}
       # IR_URL: http://image-recognition
+
+  search-engine:
+    build:
+      context: ./search-engine
+      dockerfile: Dockerfile
+    volumes:
+      - ./search-engine:/app/src
+    ports:
+      - "${SEARCH_ENGINE_PORT}:${SEARCH_ENGINE_PORT}"
+    depends_on:
+      - db
+    profiles:
+      - all
+      - services
+      - notdb
+    env_file: 
+      - ./search-engine/.env
+    environment:
+      POSTGRES_HOST: db
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_PORT: ${POSTGRES_PORT}
+      AUTH_TOKEN: ${AUTH_TOKEN}
   
   processor:
     build:
