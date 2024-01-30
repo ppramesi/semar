@@ -1,3 +1,7 @@
+const services = {
+  "semantic-search": process.env.NUXT_SEMANTIC_SEARCH_ENDPOINT,
+};
+
 export function getSummariesPerPage(){
   const envPerPage = process.env.NUXT_SUMMARIES_PER_PAGE;
   if (envPerPage && envPerPage.length > 0) {
@@ -11,4 +15,12 @@ export function getSummariesPerPage(){
   }
 
   return 10;
+}
+
+export function getServicesUrl(service: keyof typeof services) {
+  if (services[service] === undefined) {
+    throw new Error(`Service ${service} not found`);
+  }
+
+  return new URL(services[service]!).toString();
 }

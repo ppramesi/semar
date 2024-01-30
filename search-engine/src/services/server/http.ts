@@ -37,7 +37,7 @@ export class HttpSearchEngine extends SearchEngineServer {
   buildRoute(): void {
     this.app.use(buildAuthMiddleware(process.env.AUTH_TOKEN));
     this.app.use(express.json());
-    this.app.post("/search", this.handleSearch.bind(this));
+    this.app.post("/semantic-search", this.handleSearch.bind(this));
   }
 
   private async handleSearch(req: Request, res: Response) {
@@ -48,7 +48,7 @@ export class HttpSearchEngine extends SearchEngineServer {
     };
     try {
       const summaries = await this.engine.search(query, offset, limit);
-      res.status(200).send({ status: "success", summaries });
+      res.status(200).send({ status: "success", result: summaries });
       return;
     } catch (error) {
       console.error(error);

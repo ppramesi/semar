@@ -190,6 +190,15 @@ paths:
                 type: array
                 items:
                   type: object
+        '400':
+          description: Bad Request
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+              error:
+                type: string
 
   /classify:
     post:
@@ -221,7 +230,7 @@ paths:
                   type: string
       responses:
         '200':
-          description: Successful classification
+          description: Successful semantic search
           schema:
             type: object
             properties:
@@ -231,9 +240,77 @@ paths:
                 type: array
                 items:
                   type: object
+        '400':
+          description: Bad Request
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+              error:
+                type: string
 
-  # Add more paths for other services like ml-reranker and ml-zero-shot-classifier
+  /semantic-search:
+    post:
+      summary: Endpoint for zero-shot classification
+      operationId: classify
+      x-google-backend:
+        address: ${ZERO_SHOT_CLASSIFIER_ENDPOINT}
+        path_translation: CONSTANT_ADDRESS
+        deadline: 600.0
+      parameters:
+        - in: header
+          name: auth-token
+          required: true
+          type: string
+        - in: body
+          name: body
+          description: Base query for semantic search
+          required: true
+          schema:
+            type: object
+            properties:
+              query:
+                type: string
+      responses:
+        '200':
+          description: Successful classification
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+              result:
+                type: array
+                items:
+                  $ref: '#/definitions/Summary'
+        '400':
+          description: Bad Request
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+              error:
+                type: string
+
+# Add more paths for other services like ml-reranker and ml-zero-shot-classifier
 definitions:
+  Summary:
+    type: object
+    properties:
+      id:
+        type: string
+      text:
+        type: string
+      ref_tweets:
+        type: array
+        items:
+          type: string
+    required:
+      - id
+      - text
+
   Tweet:
     type: object
     properties:
@@ -263,7 +340,7 @@ definitions:
       - text
       - date
       - url
-
+  
   Media:
     type: object
     properties:

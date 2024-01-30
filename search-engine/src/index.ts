@@ -60,7 +60,7 @@ await db.ensureTablesInDatabase();
 const engine = new SearchEngine({ db });
 
 const httpServer = new HttpSearchEngine({
-  port: Number(process.env.SEARCH_ENGINE_PORT),
+  port: Number(process.env.SEMANTIC_SEARCH_PORT),
   engine
 });
 

@@ -423,8 +423,8 @@ export class PGNoneExt<
     return new Fragment(`SELECT ${selectStatement} FROM $1:name`, [tableName]);
   }
 
-  buildOrderByLimit(_limit: number): Fragment {
-    return new Fragment("");
+  buildOrderByLimit(limit: number): Fragment {
+    return new Fragment(`LIMIT $1;`, [limit]);
   }
 
   buildEnsureExtensionStatement(): string {
@@ -594,7 +594,7 @@ export class PGVectorExt<
     let embeddingStatement;
     switch (this.selectedMetric) {
       case "cosine":
-        embeddingStatement = `1 - ($1:name <=> $2::vector)`;
+        embeddingStatement = `($1:name <=> $2::vector)`;
         break;
       case "l2":
         embeddingStatement = `$1:name <-> $2::vector`;

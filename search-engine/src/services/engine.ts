@@ -1,6 +1,7 @@
 import { SemarPostgres } from "../adapters/db/pg.js";
 import { Summary } from "../types/tweet.js";
 import caller from "../services/callers/caller.js";
+import _ from "lodash";
 
 export type SearchEngineOptions = {
   db: SemarPostgres;
@@ -19,12 +20,12 @@ export class SearchEngine {
     limit: number = 10,
   ): Promise<Summary[]> {
     const fromVectorStore =
-      await this.db.summaryVectorstore.similaritySearch(query, offset + limit);
+      await this.db.summaryVectorstore.similaritySearch(query, 2 * (10 + offset + limit));
     console.log({ fromVectorStore });
     const summaries = fromVectorStore.map((doc) => {
       return {
         id: doc.metadata.id,
-        ref_tweets: JSON.parse(doc.metadata.ref_tweets),
+        ref_tweets: JSON.parse(!_.isEmpty(doc.metadata.ref_tweets) ? doc.metadata.ref_tweets : "[]"),
         text: doc.pageContent,
       };
     }) as Summary[];

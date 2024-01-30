@@ -67,7 +67,7 @@ services:
     volumes:
       - ./search-engine:/app/src
     ports:
-      - "${SEARCH_ENGINE_PORT}:${SEARCH_ENGINE_PORT}"
+      - "${SEMANTIC_SEARCH_PORT}:${SEMANTIC_SEARCH_PORT}"
     depends_on:
       - db
     profiles:
