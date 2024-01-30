@@ -4,6 +4,8 @@ import { defineEventHandler, readBody } from "h3";
 import _ from "lodash";
 import { getServicesUrl } from "~/lib/env";
 
+export const maxDuration = 60 * 5;
+
 export default defineEventHandler(async (event) => {
   try {
     const { query } = await readBody<{ query: string }>(event);
