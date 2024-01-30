@@ -76,28 +76,33 @@ async function fetchSummaries(page: number){
 async function searchSummaries(){
   if(searchQuery.value && searchQuery.value.length > 0){
     showSpinner.value = true;
-    searching.value = true;
-    const searchSummaries = await $fetch<Summary[]>("/api/semantic_search", {
-      method: "POST",
-      body: JSON.stringify({ query: searchQuery.value })
-    });
-    allSummaries.value = [...(searchSummaries ?? [])];
+    try {
+      const searchSummaries = await $fetch<Summary[]>("/api/semantic_search", {
+        method: "POST",
+        body: JSON.stringify({ query: searchQuery.value })
+      });
+      allSummaries.value = [...(searchSummaries ?? [])];
 
-    // Re-fetch tweets if needed
-    const fetchTweetIds = Array.from(new Set((searchSummaries ?? []).map((summary) => summary.ref_tweets).flat()));
-    const newTweetData = await $fetch<Tweet[]>("/api/tweets", {
-      method: "POST",
-      body: JSON.stringify(fetchTweetIds)
-    });
+      // Re-fetch tweets if needed
+      const fetchTweetIds = Array.from(new Set((searchSummaries ?? []).map((summary) => summary.ref_tweets).flat()));
+      const newTweetData = await $fetch<Tweet[]>("/api/tweets", {
+        method: "POST",
+        body: JSON.stringify(fetchTweetIds)
+      });
 
-    // Update the refTweets
-    (searchSummaries ?? []).forEach((summary) => {
-      const tweets = newTweetData.filter((tweet) => summary.ref_tweets.includes(tweet.id));
-      if (tweets) {
-        refTweets.value[summary.id] = tweets;
-      }
-    });
-    showSpinner.value = false;
+      // Update the refTweets
+      (searchSummaries ?? []).forEach((summary) => {
+        const tweets = newTweetData.filter((tweet) => summary.ref_tweets.includes(tweet.id));
+        if (tweets) {
+          refTweets.value[summary.id] = tweets;
+        }
+      });
+    } catch (error) {
+      console.error(error);
+      useNuxtApp().$toast.error((error as Error).message);
+    } finally {
+      showSpinner.value = false;
+    }
   }
 }
 

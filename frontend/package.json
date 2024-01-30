@@ -31,6 +31,7 @@
     "marked": "^11.1.1",
     "nitropack": "^2.8.1",
     "pg-promise": "^11.5.4",
-    "uuid": "^9.0.1"
+    "uuid": "^9.0.1",
+    "vue3-toastify": "^0.2.1"
   }
 }
