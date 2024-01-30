@@ -34,19 +34,19 @@ const scrapeAccounts = joinWithCommasAnd(accountsData.value?.map(account => `@${
 async function fetchSummaries(page?: number){
   showSpinner.value = true;
   const summariesEndpoint = page ? `/api/summaries/${page}` : "/api/summaries";
-  const { data: newSummaries } = await useFetch<Summary[]>(summariesEndpoint);
-  allSummaries.value = [...allSummaries.value, ...(newSummaries.value ?? [])];
+  const newSummaries = await $fetch<Summary[]>(summariesEndpoint);
+  allSummaries.value = [...allSummaries.value, ...(newSummaries ?? [])];
 
   // Re-fetch tweets if needed
-  const fetchTweetIds = Array.from(new Set((newSummaries.value ?? []).map((summary) => summary.ref_tweets).flat()));
-  const { data: newTweetData } = await useFetch<Tweet[]>("/api/tweets", {
+  const fetchTweetIds = Array.from(new Set((newSummaries ?? []).map((summary) => summary.ref_tweets).flat()));
+  const newTweetData = await $fetch<Tweet[]>("/api/tweets", {
     method: "POST",
     body: JSON.stringify(fetchTweetIds)
   });
 
   // Update the refTweets
-  (newSummaries.value ?? []).forEach((summary) => {
-    const tweets = newTweetData.value?.filter((tweet) => summary.ref_tweets.includes(tweet.id));
+  (newSummaries ?? []).forEach((summary) => {
+    const tweets = newTweetData.filter((tweet) => summary.ref_tweets.includes(tweet.id));
     if (tweets) {
       refTweets.value[summary.id] = tweets;
     }
@@ -58,22 +58,22 @@ async function searchSummaries(){
   if(searchQuery.value && searchQuery.value.length > 0){
     showSpinner.value = true;
     searching.value = true;
-    const { data: searchSummaries } = await useFetch<Summary[]>("/api/semantic_search", {
+    const searchSummaries = await $fetch<Summary[]>("/api/semantic_search", {
       method: "POST",
       body: JSON.stringify({ query: searchQuery.value })
     });
-    allSummaries.value = [...(searchSummaries.value ?? [])];
+    allSummaries.value = [...(searchSummaries ?? [])];
 
     // Re-fetch tweets if needed
-    const fetchTweetIds = Array.from(new Set((searchSummaries.value ?? []).map((summary) => summary.ref_tweets).flat()));
-    const { data: newTweetData } = await useFetch<Tweet[]>("/api/tweets", {
+    const fetchTweetIds = Array.from(new Set((searchSummaries ?? []).map((summary) => summary.ref_tweets).flat()));
+    const newTweetData = await $fetch<Tweet[]>("/api/tweets", {
       method: "POST",
       body: JSON.stringify(fetchTweetIds)
     });
 
     // Update the refTweets
-    (searchSummaries.value ?? []).forEach((summary) => {
-      const tweets = newTweetData.value?.filter((tweet) => summary.ref_tweets.includes(tweet.id));
+    (searchSummaries ?? []).forEach((summary) => {
+      const tweets = newTweetData.filter((tweet) => summary.ref_tweets.includes(tweet.id));
       if (tweets) {
         refTweets.value[summary.id] = tweets;
       }
