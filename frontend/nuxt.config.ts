@@ -15,5 +15,12 @@ export default defineNuxtConfig({
       tailwindcss: {},
       autoprefixer: {},
     },
+  },
+  nitro: {
+    vercel: {
+      functions:{
+        maxDuration: 300
+      }
+    }
   }
 })
