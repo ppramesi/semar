@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 service=${1}
 mode=${2:-development}
 env_file_arg=${3:-.env.cloudrun}
@@ -103,6 +105,7 @@ declare -A services=(
     ["processor"]="PROCESSOR_PROCESS_TWEETS_ENDPOINT:/process-tweets PROCESSOR_START_PIPELINE_ENDPOINT:/start-pipeline"
     ["ml-zero-shot-classifier"]="ZERO_SHOT_CLASSIFIER_ENDPOINT:/"
     ["ml-reranker"]="RERANKER_ENDPOINT:/"
+    ["semantic-search"]="SEMANTIC_SEARCH_ENDPOINT:/semantic-search"
 )
 
 if [[ $version =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then

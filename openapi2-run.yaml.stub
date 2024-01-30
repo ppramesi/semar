@@ -252,10 +252,10 @@ paths:
 
   /semantic-search:
     post:
-      summary: Endpoint for zero-shot classification
-      operationId: classify
+      summary: Endpoint for vs embedding semantic search
+      operationId: semanticSearch
       x-google-backend:
-        address: ${ZERO_SHOT_CLASSIFIER_ENDPOINT}
+        address: ${SEMANTIC_SEARCH_ENDPOINT}
         path_translation: CONSTANT_ADDRESS
         deadline: 600.0
       parameters:
@@ -274,7 +274,7 @@ paths:
                 type: string
       responses:
         '200':
-          description: Successful classification
+          description: Successful search
           schema:
             type: object
             properties:

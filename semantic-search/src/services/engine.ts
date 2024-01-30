@@ -1,6 +1,6 @@
 import { SemarPostgres } from "../adapters/db/pg.js";
 import { Summary } from "../types/tweet.js";
-import caller from "../services/callers/caller.js";
+import caller from "./callers/caller.js";
 import _ from "lodash";
 
 export type SearchEngineOptions = {

@@ -114,7 +114,7 @@ class Fragment {
     joiner = " ",
     enclosed = false,
   ): Fragment {
-    const queryArray = [];
+    const queryArray: string[] = [];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let combinedValues: any[] = [];
     let placeholderOffset = 0;
@@ -644,7 +644,7 @@ export class PGVectorExt<
     }: { m?: number; efConstruction?: number; efSearch?: number },
   ): string {
     let efSearchStr = "";
-    const opts = [];
+    const opts: string[] = [];
     if (m) opts.push(`m = ${m}`);
     if (efConstruction) opts.push(`ef_construction = ${efConstruction}`);
     if (efSearch) {
@@ -979,12 +979,12 @@ export class PGVectorStore<
     ];
     let parameterCount = 5;
 
-    const extraColumns = [];
+    const extraColumns: string[] = [];
 
     for (let i = 0; i < this.extraColumns.length; i += 1) {
       const { name, type, notNull, references } = this.extraColumns[i];
       let refString = "";
-      const refParams = [];
+      const refParams: string[] = [];
       let adder = 2;
       if (references) {
         if (typeof references === "string") {
@@ -1037,8 +1037,8 @@ export class PGVectorStore<
       throw new Error(`Invalid join statement: ${op}`);
     }
 
-    const parametrizedOn = [];
-    const onParams = [];
+    const parametrizedOn: string[] = [];
+    const onParams: string[] = [];
     for (let k = 0; k < on.length; k += 2) {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       if (on[k].operator && !allowedOperators.includes(on[k].operator!)) {

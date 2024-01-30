@@ -60,12 +60,12 @@ services:
       # IR_PORT: ${IR_PORT}
       # IR_URL: http://image-recognition
 
-  search-engine:
+  semantic-search:
     build:
-      context: ./search-engine
+      context: ./semantic-search
       dockerfile: Dockerfile
     volumes:
-      - ./search-engine:/app/src
+      - ./semantic-search:/app/src
     ports:
       - "${SEMANTIC_SEARCH_PORT}:${SEMANTIC_SEARCH_PORT}"
     depends_on:
@@ -75,14 +75,24 @@ services:
       - services
       - notdb
     env_file: 
-      - ./search-engine/.env
+      - ./semantic-search/.env
     environment:
+      HARVESTER_SEARCH_ENDPOINT: http://harvester:${HARVESTER_PORT}/search-relevant-tweets/
+      HARVESTER_SCRAPE_ENDPOINT: http://harvester:${HARVESTER_PORT}/scrape-tweets/
+      ZERO_SHOT_CLASSIFIER_ENDPOINT: http://ml-zero-shot-classifier:${ZERO_SHOT_CLASSIFIER_PORT}/
+      RERANKER_ENDPOINT: http://ml-reranker:${RERANKER_PORT}/
       POSTGRES_HOST: db
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_PORT: ${POSTGRES_PORT}
       AUTH_TOKEN: ${AUTH_TOKEN}
+      PROCESSOR_PORT: ${PROCESSOR_PORT}
+      LANGSMITH_API_KEY: ${LANGSMITH_API_KEY}
+      LANGSMITH_PROJECT_NAME: ${LANGSMITH_PROJECT_NAME}
+      RERANK_VECTOR_SEARCH_RESULTS: ${RERANK_VECTOR_SEARCH_RESULTS}
+      ZERO_SHOT_CLASSIFY_TWEETS: ${ZERO_SHOT_CLASSIFY_TWEETS}
+      CLASSIFIER_AGGREGATOR: ${CLASSIFIER_AGGREGATOR}
   
   processor:
     build:
