@@ -31,7 +31,26 @@ const { data: accountsData } = await useFetch<ScrapeAccount[]>("/api/scrape_acco
 
 const scrapeAccounts = joinWithCommasAnd(accountsData.value?.map(account => `@${account.name}`))
 
-async function fetchSummaries(page?: number){
+const summariesEndpoint = "/api/summaries";
+const { data: newSummaries } = await useFetch<Summary[]>(summariesEndpoint);
+allSummaries.value = [...allSummaries.value, ...(newSummaries.value ?? [])];
+
+// Re-fetch tweets if needed
+const fetchTweetIds = Array.from(new Set((newSummaries.value ?? []).map((summary) => summary.ref_tweets).flat()));
+const { data: newTweetData } = await useFetch<Tweet[]>("/api/tweets", {
+  method: "POST",
+  body: JSON.stringify(fetchTweetIds)
+});
+
+// Update the refTweets
+(newSummaries.value ?? []).forEach((summary) => {
+  const tweets = newTweetData.value?.filter((tweet) => summary.ref_tweets.includes(tweet.id));
+  if (tweets) {
+    refTweets.value[summary.id] = tweets;
+  }
+});
+
+async function fetchSummaries(page: number){
   showSpinner.value = true;
   const summariesEndpoint = page ? `/api/summaries/${page}` : "/api/summaries";
   const newSummaries = await $fetch<Summary[]>(summariesEndpoint);
@@ -84,11 +103,9 @@ async function searchSummaries(){
 
 async function clearSearch(){
   searchQuery.value = "";
-  await fetchSummaries();
+  await fetchSummaries(0);
   searching.value = false;
 }
-
-fetchSummaries();
 
 async function loadMore() {
   currentPage.value += 1;
