@@ -29,7 +29,7 @@ app.middleware('http')(auth_middleware)
 @app.post("/")
 async def handle_classify_request(request_data: ClassifyRequest):
     try:
-        result = await classifier.process_texts(queries=request_data.queries, classes=request_data.classes)
-        return {"status": "success", "result": result}
+        (result, scores) = await classifier.process_texts(queries=request_data.queries, classes=request_data.classes)
+        return {"status": "success", "result": result, "scores": scores}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))

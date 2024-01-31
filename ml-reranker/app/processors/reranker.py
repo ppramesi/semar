@@ -16,7 +16,7 @@ class Reranker(Processor):
         scores = await loop.run_in_executor(self.executor, self.model.predict, model_inputs)
         scored_indices = sorted(enumerate(scores), key=lambda x: x[1], reverse=True)
         # Extract the sorted indices
-        sorted_indices = [index for index, score in scored_indices]
+        sorted_indices = [(index, score) for index, score in scored_indices]
         print("Sorted indices: " + str(sorted_indices))
         return sorted_indices
 

@@ -29,7 +29,7 @@ app.middleware('http')(auth_middleware)
 @app.post("/")
 async def handle_rerank_request(request_data: RerankRequest):
     try:
-        result = await reranker.process_texts(base_passage=request_data.base_passage, queries=request_data.queries)
-        return {"status": "success", "result": result}
+        results = await reranker.process_texts(base_passage=request_data.base_passage, queries=request_data.queries)
+        return {"status": "success", "result": [result[0] for result in results], "scores": [result[1] for result in results]}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))

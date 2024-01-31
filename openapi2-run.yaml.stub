@@ -189,7 +189,11 @@ paths:
               result:
                 type: array
                 items:
-                  type: object
+                  type: number
+              scores:
+                type: array
+                items:
+                  type: number
         '400':
           description: Bad Request
           schema:
@@ -239,7 +243,15 @@ paths:
               result:
                 type: array
                 items:
-                  type: object
+                  type: array
+                  items:
+                    type: string
+              scores:
+                type: array
+                items:
+                  type: array
+                  items:
+                    type: number
         '400':
           description: Bad Request
           schema:
