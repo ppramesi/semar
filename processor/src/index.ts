@@ -116,7 +116,7 @@ const server = new SemarHttpServer({
   callbacks: modelCallbacks,
   classifierAggregator,
 });
-process.on('SIGTERM', async () => {
+process.on("SIGTERM", async () => {
   await db.disconnect();
   process.exit(0);
 });

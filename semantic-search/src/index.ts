@@ -61,7 +61,7 @@ const engine = new SearchEngine({ db });
 
 const httpServer = new HttpSearchEngine({
   port: Number(process.env.SEMANTIC_SEARCH_PORT),
-  engine
+  engine,
 });
 
 httpServer.buildRoute();

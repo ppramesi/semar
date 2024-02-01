@@ -27,7 +27,7 @@ export class Database {
     this.pg = await this.connectWithRetry();
   }
 
-  async disconnect(){
+  async disconnect() {
     await this.pg.$pool.end();
   }
 

@@ -21,7 +21,7 @@ async function run() {
       crawlManager,
     });
     server.listen(process.env.HARVESTER_PORT ?? 2222);
-    process.on('SIGTERM', async () => {
+    process.on("SIGTERM", async () => {
       await dbInstance.disconnect();
       process.exit(0);
     });

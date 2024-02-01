@@ -2,13 +2,10 @@ import { cloudEvent } from "@google-cloud/functions-framework";
 import _ from "lodash";
 import axios, { type AxiosRequestConfig } from "axios";
 
-function callStartPipeline(url: string, authToken?: string){
+function callStartPipeline(url: string, authToken?: string) {
   const postCfg: AxiosRequestConfig = {};
 
-  if (
-    !_.isNil(authToken) &&
-    (authToken as string).length > 0
-  ) {
+  if (!_.isNil(authToken) && (authToken as string).length > 0) {
     postCfg.headers = {
       "auth-token": authToken,
     };
