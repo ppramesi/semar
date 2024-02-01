@@ -6,6 +6,18 @@ import { type Tag } from './types/tag';
 import { marked } from "marked";
 import { ref } from 'vue';
 
+declare module window {
+  export const twttr: any;
+}
+
+useHead({
+  script: [
+    {
+      src: "https://platform.twitter.com/widgets.js"
+    }
+  ]
+});
+
 function joinWithCommasAnd(array?: string[]): string {
   if (!array) {
     return "";
@@ -52,25 +64,40 @@ const { data: newTweetData } = await useFetch<Tweet[]>("/api/tweets", {
 
 async function fetchSummaries(page: number){
   showSpinner.value = true;
-  const summariesEndpoint = page ? `/api/summaries/${page}` : "/api/summaries";
-  const newSummaries = await $fetch<Summary[]>(summariesEndpoint);
-  allSummaries.value = [...allSummaries.value, ...(newSummaries ?? [])];
+  try {
+    const summariesEndpoint = page ? `/api/summaries/${page}` : "/api/summaries";
+    const newSummaries = await $fetch<Summary[]>(summariesEndpoint);
+    allSummaries.value = [...allSummaries.value, ...(newSummaries ?? [])];
 
-  // Re-fetch tweets if needed
-  const fetchTweetIds = Array.from(new Set((newSummaries ?? []).map((summary) => summary.ref_tweets).flat()));
-  const newTweetData = await $fetch<Tweet[]>("/api/tweets", {
-    method: "POST",
-    body: JSON.stringify(fetchTweetIds)
-  });
+    // Re-fetch tweets if needed
+    const fetchTweetIds = Array.from(new Set((newSummaries ?? []).map((summary) => summary.ref_tweets).flat()));
+    const newTweetData = await $fetch<Tweet[]>("/api/tweets", {
+      method: "POST",
+      body: JSON.stringify(fetchTweetIds)
+    });
 
-  // Update the refTweets
-  (newSummaries ?? []).forEach((summary) => {
-    const tweets = newTweetData.filter((tweet) => summary.ref_tweets.includes(tweet.id));
-    if (tweets) {
-      refTweets.value[summary.id] = tweets;
-    }
-  });
-  showSpinner.value = false;
+    // Update the refTweets
+    (newSummaries ?? []).forEach((summary) => {
+      const tweets = newTweetData.filter((tweet) => summary.ref_tweets.includes(tweet.id));
+      if (tweets) {
+        refTweets.value[summary.id] = tweets;
+        nextTick(() => {
+          tweets.forEach((tweet) => {
+            const elem = document.getElementById(`${summary.id}-${tweet.id}`);
+            console.log(elem);
+            if(window.twttr && elem){
+              window.twttr.widgets.load(elem);
+            }
+          });
+        });
+      }
+    });
+  } catch (error) {
+    console.error(error);
+    useNuxtApp().$toast.error((error as Error).message);
+  } finally {
+    showSpinner.value = false;
+  }
 }
 
 async function searchSummaries(){
@@ -95,6 +122,15 @@ async function searchSummaries(){
         const tweets = newTweetData.filter((tweet) => summary.ref_tweets.includes(tweet.id));
         if (tweets) {
           refTweets.value[summary.id] = tweets;
+          nextTick(() => {
+            tweets.forEach((tweet) => {
+              const elem = document.getElementById(`${summary.id}-${tweet.id}`);
+              console.log(elem);
+              if(window.twttr && elem){
+                window.twttr.widgets.load(elem);
+              }
+            });
+          });
         }
       });
     } catch (error) {
@@ -130,9 +166,9 @@ const tags = joinWithCommasAnd(tagData.value?.map(v => v.tag));
 </script>
 
 <template>
-  <div class="w-screen">
+  <div>
     <Transition>
-      <div v-if="showSpinner" class="text-center w-screen h-screen absolute flex justify-center items-center bg-black bg-opacity-30">
+      <div v-if="showSpinner" class="text-center w-screen h-screen fixed flex justify-center items-center bg-black bg-opacity-30">
           <div role="status">
               <svg aria-hidden="true" class="inline w-8 h-8 text-gray-200 animate-spin dark:text-gray-600 fill-blue-600" viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z" fill="currentColor"/>
@@ -143,7 +179,7 @@ const tags = joinWithCommasAnd(tagData.value?.map(v => v.tag));
       </div>
     </Transition>
     
-    <div class="flex flex-col w-192 mx-auto">
+    <div class="flex flex-col w-152 mx-auto">
       <h1 class="mb-4 mt-6 text-4xl font-extrabold leading-none tracking-tight text-gray-900 md:text-5xl lg:text-6xl">News for {{ tags }} from {{ scrapeAccounts }}</h1>
       <div v-if="value && value?.length > 0">
         <form @submit.prevent="searchSummaries">   
@@ -171,8 +207,11 @@ const tags = joinWithCommasAnd(tagData.value?.map(v => v.tag));
               Sources:
             </div>
             <div class="flex flex-col">
-              <div v-for="source in refTweets[summary.id]" class="my-2 p-4 border border-gray-300 rounded-md">
-                <div class="mb-2">
+              <div v-for="source in refTweets[summary.id]" :id="`${summary.id}-${source.id}`">
+                <blockquote class="twitter-tweet">
+                  <a :href="source.url"></a> 
+                </blockquote>
+                <!-- <div class="mb-2">
                   {{ source.text }}
                 </div>
                 <div class="mb-2">
@@ -182,12 +221,12 @@ const tags = joinWithCommasAnd(tagData.value?.map(v => v.tag));
                 </div>
                 <div>
                   Tags: {{ joinWithCommasAnd(source.tags) }}
-                </div>
+                </div> -->
               </div>
             </div>
           </div>
         </div>
-        <div v-if="!searching" class="w-full">
+        <div v-if="!searching" class="w-full flex justify-center p-2 mb-2">
           <button 
             @click="loadMore"
             class="bg-transparent hover:bg-blue-500 text-blue-700 font-semibold hover:text-white py-2 px-4 border border-blue-500 hover:border-transparent rounded"

@@ -12,6 +12,7 @@ export default {
     extend: {
       "width": {
         "192": "48rem",
+        "152": "38rem",
       }
     },
   },
