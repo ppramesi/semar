@@ -1,0 +1,10 @@
+/node_modules/
+.env
+.env.*
+.versions
+!.env.example
+!.env.*.example
+/dist/
+/test/
+__pycache__
+/model/

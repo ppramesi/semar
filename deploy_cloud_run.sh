@@ -92,7 +92,7 @@ fi
 
 dockerfile_path="$service_dir"
 # Handle special case for ml-reranker and ml-zero-shot-classifier
-if [[ "$service" == "ml-reranker" ]] || [[ "$service" == "ml-zero-shot-classifier" ]]; then
+if [[ "$service" == "ml-reranker" ]] || [[ "$service" == "ml-zero-shot-classifier" ] || [[ "$service" == "ml-summarizer" ]]; then
     if [ -z "$ML_ENVIRONMENT" ]; then
         echo "Error: ML_ENVIRONMENT is not set. It must be either 'cpu' or 'gpu'."
         exit 1
@@ -101,10 +101,12 @@ if [[ "$service" == "ml-reranker" ]] || [[ "$service" == "ml-zero-shot-classifie
 fi
 
 declare -A services=(
+    ["article-fetcher"]="ARTICLE_FETCHER_ENDPOINT:/"
     ["harvester"]="HARVESTER_SEARCH_ENDPOINT:/search-relevant-tweets HARVESTER_SCRAPE_ENDPOINT:/scrape-tweets"
     ["processor"]="PROCESSOR_PROCESS_TWEETS_ENDPOINT:/process-tweets PROCESSOR_START_PIPELINE_ENDPOINT:/start-pipeline"
     ["ml-zero-shot-classifier"]="ZERO_SHOT_CLASSIFIER_ENDPOINT:/"
     ["ml-reranker"]="RERANKER_ENDPOINT:/"
+    ["ml-summarizer"]="SUMMARIZER_ENDPOINT:/"
     ["semantic-search"]="SEMANTIC_SEARCH_ENDPOINT:/semantic-search"
 )
 

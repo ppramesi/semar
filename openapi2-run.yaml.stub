@@ -152,6 +152,92 @@ paths:
               error:
                 type: string
 
+  /article-fetcher:
+    post:
+      summary: Endpoint for article fetcher
+      operationId: articleFetcher
+      x-google-backend:
+        address: ${ARTICLE_FETCHER_ENDPOINT}
+        path_translation: CONSTANT_ADDRESS
+        deadline: 600.0
+      parameters:
+        - in: header
+          name: auth-token
+          required: true
+          type: string
+        - in: body
+          name: body
+          description: text to summarize
+          required: true
+          schema:
+            type: object
+            properties:
+              urls:
+                type: array
+                items:
+                  type: string
+      responses:
+        '200':
+          description: Successful summarization
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+              result:
+                type: string
+        '400':
+          description: Bad Request
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+              error:
+                type: string
+
+  /summarizer:
+    post:
+      summary: Endpoint for summarizer
+      operationId: summarizer
+      x-google-backend:
+        address: ${SUMMARIZER_ENDPOINT}
+        path_translation: CONSTANT_ADDRESS
+        deadline: 600.0
+      parameters:
+        - in: header
+          name: auth-token
+          required: true
+          type: string
+        - in: body
+          name: body
+          description: text to summarize
+          required: true
+          schema:
+            type: object
+            properties:
+              text:
+                type: string
+      responses:
+        '200':
+          description: Successful summarization
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+              result:
+                type: string
+        '400':
+          description: Bad Request
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+              error:
+                type: string
+
   /rerank:
     post:
       summary: Endpoint for re-ranking

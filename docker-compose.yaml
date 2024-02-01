@@ -186,6 +186,46 @@ services:
       PROCESSOR_PROCESS_TWEETS_ENDPOINT: http://processor:${PROCESSOR_PORT}/process-tweets/
       PROCESSOR_START_PIPELINE_ENDPOINT: http://processor:${PROCESSOR_PORT}/start-pipeline/
   
+  article-fetcher:
+    build:
+      context: ./article-fetcher
+      dockerfile: Dockerfile
+    volumes:
+      - ./article-fetcher:/app/src
+    ports:
+      - "${ARTICLE_FETCHER_PORT}:${ARTICLE_FETCHER_PORT}"
+    profiles:
+      - all
+      - ml
+      - notdb
+    env_file: 
+      - ./article-fetcher/.env
+    environment:
+      ARTICLE_FETCHER_PORT: ${ARTICLE_FETCHER_PORT}
+      ARTICLE_FETCHER_URL: ${ARTICLE_FETCHER_URL}
+      AUTH_TOKEN: ${AUTH_TOKEN}
+      ML_ENVIRONMENT: ${ML_ENVIRONMENT}
+  
+  ml-summarizer:
+    build:
+      context: ./ml-summarizer
+      dockerfile: ./docker/${ML_ENVIRONMENT}/Dockerfile
+    volumes:
+      - ./ml-summarizer:/app/src
+    ports:
+      - "${SUMMARIZER_PORT}:${SUMMARIZER_PORT}"
+    profiles:
+      - all
+      - ml
+      - notdb
+    env_file: 
+      - ./ml-summarizer/.env
+    environment:
+      SUMMARIZER_PORT: ${SUMMARIZER_PORT}
+      SUMMARIZER_URL: ${SUMMARIZER_URL}
+      AUTH_TOKEN: ${AUTH_TOKEN}
+      ML_ENVIRONMENT: ${ML_ENVIRONMENT}
+  
   ml-reranker:
     build:
       context: ./ml-reranker
