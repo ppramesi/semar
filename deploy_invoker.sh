@@ -8,7 +8,7 @@ set -e
 
 set -o allexport
 if [ -f "./invoker/.env" ]; then
-    source .env.invoker
+    source /invoker/.env
 else
     echo "Error: .env.cloudrun file not found in the service directory."
     exit 1
