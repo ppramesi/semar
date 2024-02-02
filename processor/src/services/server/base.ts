@@ -71,7 +71,7 @@ export abstract class SemarServer {
 
   async generateTags(tweets: Tweet[]): Promise<string[][]> {
     const procTweets = TagGenerator.processTweets(tweets);
-    const { extracted_tags: tags } = await this.tagGenerator.invoke(
+    const { extracted_tags: tags } = await this.tagGenerator.call(
       {
         batch_size: tweets.length,
         tweets: procTweets,
@@ -135,7 +135,7 @@ export abstract class SemarServer {
     const procTweets = DuplicateChecker.processTweets(tweets);
     const dupeCheckResults = await Promise.all(
       docsResult.map((summary) => {
-        return this.dupeChecker.invoke(
+        return this.dupeChecker.call(
           {
             tweets: procTweets,
             summary: summary.pageContent,
@@ -222,7 +222,7 @@ export abstract class SemarServer {
       contextTweets && contextTweets.length > 0
         ? TweetSummarizer.processTweets(contextTweets)
         : "";
-    const { text: result } = await this.summarizer.invoke(
+    const { text: result } = await this.summarizer.call(
       {
         batch_size: tweets.length,
         tweets: procTweets,
@@ -304,7 +304,7 @@ export abstract class SemarServer {
     const splitByTopic = await rawAggregated.map(async (aggrTweets) => {
       const procTweets = TopicSplitter.processTweets(aggrTweets);
       const { aggregated_tweets: groupedTweetIds } =
-        await this.topicSplitter.invoke(
+        await this.topicSplitter.call(
           {
             batch_size: aggrTweets.length,
             tweets: procTweets,
