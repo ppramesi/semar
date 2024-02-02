@@ -34,7 +34,7 @@ export class LLMClassifierAggregator extends ClassifierAggregator {
 
   async testRelevancy(tweets: Tweet[], tags: Tag[]): Promise<Tweet[]> {
     if (tags.length > 0) {
-      const { relevant_tweets: ids } = await this.relevancyEvaluator.call(
+      const { relevant_tweets: ids } = await this.relevancyEvaluator.invoke(
         {
           batch_size: tweets.length,
           tweets: TweetRelevancyEvaluator.processTweets(tweets),
@@ -53,7 +53,7 @@ export class LLMClassifierAggregator extends ClassifierAggregator {
     _originalTweets: Tweet[],
   ): Promise<Tweet[][]> {
     const procTweets = TweetAggregator.processTweets(relevantTweets);
-    const { aggregated_tweets: groupedTweetIds } = await this.aggregator.call(
+    const { aggregated_tweets: groupedTweetIds } = await this.aggregator.invoke(
       {
         batch_size: relevantTweets.length,
         tweets: procTweets,

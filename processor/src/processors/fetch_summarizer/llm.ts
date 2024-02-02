@@ -30,7 +30,7 @@ export class LLMFaceFetchSummarizer extends FetchSummarizer {
           return null;
         }
 
-        const { text: result } = await this.summarizer.call(
+        const { text: result } = await this.summarizer.invoke(
           { article },
           { callbacks: this.callbacks },
         );
