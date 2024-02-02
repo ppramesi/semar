@@ -167,7 +167,7 @@ paths:
           type: string
         - in: body
           name: body
-          description: text to summarize
+          description: url to fetch
           required: true
           schema:
             type: object
@@ -178,14 +178,17 @@ paths:
                   type: string
       responses:
         '200':
-          description: Successful summarization
+          description: Fetched articles text
           schema:
             type: object
             properties:
               status:
                 type: string
               result:
-                type: string
+                type: array
+                items:
+                  type: string
+                  nullable: true
         '400':
           description: Bad Request
           schema:

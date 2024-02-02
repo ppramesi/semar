@@ -3,7 +3,7 @@ import type { Summary, Tweet } from "../../types/tweet.js";
 import { SemarPostgres } from "../../adapters/db/pg.js";
 import { Embeddings } from "langchain/embeddings/base";
 import { TagGenerator } from "../../lc/chains/generate_tags.js";
-import { TweetSummarizer } from "../../lc/chains/summarizer.js";
+import { TweetSummarizer } from "../../lc/chains/tweet_summarizer.js";
 import _ from "lodash";
 import { PGFilterWithJoin } from "../../lc/vectorstores/pg.js";
 import { v4 } from "uuid";
@@ -14,6 +14,9 @@ import { ClassifierAggregator } from "../../processors/classifier_aggregator/bas
 import { TopicSplitter } from "../../lc/chains/topic_splitter.js";
 import { Tag } from "../../types/tag.js";
 import { hashToUUID } from "../../utils/hash.js";
+import { FetchSummarizer } from "../../processors/fetch_summarizer/base.js";
+import { HuggingFaceFetchSummarizer } from "../../processors/fetch_summarizer/hf.js";
+import { LLMFaceFetchSummarizer } from "../../processors/fetch_summarizer/llm.js";
 
 export type SemarServerOpts = {
   db: SemarPostgres;
@@ -35,6 +38,8 @@ export abstract class SemarServer {
   dupeChecker: DuplicateChecker;
   serviceCaller: HttpServiceCaller = callerInstance;
   callbacks: Callbacks;
+  fetchSummarizer?: FetchSummarizer;
+
   constructor(opts: SemarServerOpts) {
     this.db = opts.db;
     this.baseLlm = opts.baseLlm;
@@ -53,11 +58,20 @@ export abstract class SemarServer {
     this.topicSplitter = new TopicSplitter({
       llm: opts.llms?.get(TopicSplitter) ?? this.baseLlm,
     });
+
+    if (process.env.FETCH_AND_SUMMARIZE === "hf") {
+      this.fetchSummarizer = new HuggingFaceFetchSummarizer();
+    } else if (process.env.FETCH_AND_SUMMARIZE === "llm") {
+      this.fetchSummarizer = new LLMFaceFetchSummarizer({
+        llm: this.baseLlm,
+        callbacks: this.callbacks,
+      });
+    }
   }
 
   async generateTags(tweets: Tweet[]): Promise<string[][]> {
     const procTweets = TagGenerator.processTweets(tweets);
-    const { extracted_tags: tags } = await this.tagGenerator.call(
+    const { extracted_tags: tags } = await this.tagGenerator.invoke(
       {
         batch_size: tweets.length,
         tweets: procTweets,
@@ -121,7 +135,7 @@ export abstract class SemarServer {
     const procTweets = DuplicateChecker.processTweets(tweets);
     const dupeCheckResults = await Promise.all(
       docsResult.map((summary) => {
-        return this.dupeChecker.call(
+        return this.dupeChecker.invoke(
           {
             tweets: procTweets,
             summary: summary.pageContent,
@@ -208,7 +222,7 @@ export abstract class SemarServer {
       contextTweets && contextTweets.length > 0
         ? TweetSummarizer.processTweets(contextTweets)
         : "";
-    const { text: result } = await this.summarizer.call(
+    const { text: result } = await this.summarizer.invoke(
       {
         batch_size: tweets.length,
         tweets: procTweets,
@@ -290,7 +304,7 @@ export abstract class SemarServer {
     const splitByTopic = await rawAggregated.map(async (aggrTweets) => {
       const procTweets = TopicSplitter.processTweets(aggrTweets);
       const { aggregated_tweets: groupedTweetIds } =
-        await this.topicSplitter.call(
+        await this.topicSplitter.invoke(
           {
             batch_size: aggrTweets.length,
             tweets: procTweets,
@@ -352,6 +366,7 @@ export abstract class SemarServer {
                   }),
                 ),
                 this.saveTweets(tweets),
+                this.injectSummaries(tweets),
               ]);
               const currentTags = (
                 tweets
@@ -385,12 +400,15 @@ export abstract class SemarServer {
                   contextTweets,
                   currentTags,
                 );
+
               const filteredContextTweets =
                 await this.classifierAggregator.testRelevancy(
                   contextTweets,
                   currentTags,
                   innerPreprocessorResult,
                 );
+
+              await this.injectSummaries(filteredContextTweets);
 
               const summary = await this.summarizeTweets(
                 tweets,
@@ -413,6 +431,18 @@ export abstract class SemarServer {
 
     if (processed.length > 0) {
       await this.db.insertSummaries(processed);
+    }
+  }
+
+  private async injectSummaries(contextTweets: Tweet[]) {
+    if (this.fetchSummarizer) {
+      const articles =
+        await this.fetchSummarizer.summarizeTweetArticles(contextTweets);
+      contextTweets.forEach((_tweet, idx) => {
+        if (!_.isEmpty(articles[idx]) && _.isString(articles[idx])) {
+          contextTweets[idx].article_summary = articles[idx] as string;
+        }
+      });
     }
   }
 

@@ -9,6 +9,7 @@ export type Tweet = {
     text: string[];
     caption: string[];
   }[];
+  article_summary?: string;
 };
 
 export type BetweenDates = {

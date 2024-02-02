@@ -14,4 +14,7 @@ export abstract class BaseServiceCaller {
     fromDate: Date,
     toDate: Date,
   ): Promise<Tweet[]>;
+  abstract scrapeTweets(): Promise<Tweet[]>;
+  abstract summarizeText(text: string): Promise<string>;
+  abstract fetchArticles(urls: string[]): Promise<(string | null)[]>;
 }

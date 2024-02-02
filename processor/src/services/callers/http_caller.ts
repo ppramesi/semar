@@ -16,6 +16,21 @@ export class HttpServiceCaller extends BaseServiceCaller {
   harvesterUrl: URL;
   mlUrl?: URL;
 
+  private buildConfig() {
+    const postCfg: AxiosRequestConfig = {};
+
+    if (
+      !_.isNil(process.env.AUTH_TOKEN) &&
+      (process.env.AUTH_TOKEN as string).length > 0
+    ) {
+      postCfg.headers = {
+        "auth-token": process.env.AUTH_TOKEN,
+      };
+    }
+
+    return postCfg;
+  }
+
   async zeroShotClassification(
     texts: string[],
     tags: string[],
@@ -28,24 +43,13 @@ export class HttpServiceCaller extends BaseServiceCaller {
     }
 
     try {
-      const postCfg: AxiosRequestConfig = {};
-
-      if (
-        !_.isNil(process.env.AUTH_TOKEN) &&
-        (process.env.AUTH_TOKEN as string).length > 0
-      ) {
-        postCfg.headers = {
-          "auth-token": process.env.AUTH_TOKEN,
-        };
-      }
-
       const response = await axios.post<{ status: string; result: string[][] }>(
         zeroShotUrl,
         {
           queries: texts,
           classes: tags,
         },
-        postCfg,
+        this.buildConfig(),
       );
 
       return response.data.result;
@@ -72,21 +76,10 @@ export class HttpServiceCaller extends BaseServiceCaller {
     };
 
     try {
-      const postCfg: AxiosRequestConfig = {};
-
-      if (
-        !_.isNil(process.env.AUTH_TOKEN) &&
-        (process.env.AUTH_TOKEN as string).length > 0
-      ) {
-        postCfg.headers = {
-          "auth-token": process.env.AUTH_TOKEN,
-        };
-      }
-
       const response = await axios.post<{ status: string; result: number[] }>(
         rerankerUrl,
         requestData,
-        postCfg,
+        this.buildConfig(),
       );
 
       return response.data.result;
@@ -98,23 +91,12 @@ export class HttpServiceCaller extends BaseServiceCaller {
 
   async scrapeTweets() {
     try {
-      const postCfg: AxiosRequestConfig = {};
-
-      if (
-        !_.isNil(process.env.AUTH_TOKEN) &&
-        (process.env.AUTH_TOKEN as string).length > 0
-      ) {
-        postCfg.headers = {
-          "auth-token": process.env.AUTH_TOKEN,
-        };
-      }
-
       const {
         data: { tweets },
       }: { data: { tweets: Tweet[] } } = await axios.post(
         getServicesUrl("harvester-scrape"),
         {},
-        postCfg,
+        this.buildConfig(),
       );
 
       return tweets;
@@ -126,17 +108,6 @@ export class HttpServiceCaller extends BaseServiceCaller {
 
   async searchRelevantTweets(keywords: string, fromDate: Date, toDate: Date) {
     try {
-      const postCfg: AxiosRequestConfig = {};
-
-      if (
-        !_.isNil(process.env.AUTH_TOKEN) &&
-        (process.env.AUTH_TOKEN as string).length > 0
-      ) {
-        postCfg.headers = {
-          "auth-token": process.env.AUTH_TOKEN,
-        };
-      }
-
       const {
         data: { tweets },
       }: { data: { tweets: Tweet[] } } = await axios.post(
@@ -146,10 +117,48 @@ export class HttpServiceCaller extends BaseServiceCaller {
           fromDate: fromDate.toISOString(),
           toDate: toDate.toISOString(),
         },
-        postCfg,
+        this.buildConfig(),
       );
 
       return tweets;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  }
+
+  async summarizeText(text: string) {
+    try {
+      const {
+        data: { result },
+      }: { data: { result: string } } = await axios.post(
+        getServicesUrl("summarizer"),
+        {
+          text,
+        },
+        this.buildConfig(),
+      );
+
+      return result;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  }
+
+  async fetchArticles(urls: (string | null)[]) {
+    try {
+      const {
+        data: { result },
+      }: { data: { result: (string | null)[] } } = await axios.post(
+        getServicesUrl("article-fetcher"),
+        {
+          urls,
+        },
+        this.buildConfig(),
+      );
+
+      return result;
     } catch (error) {
       console.error(error);
       throw error;

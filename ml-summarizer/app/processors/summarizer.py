@@ -17,7 +17,8 @@ class Summarizer(Processor):
         return results[0]["summary_text"]
     
     def _predict(self, text: str):
-        return self.model(text, max_length=min(len(text), 500))
+        max_length = min(len(text), 100)
+        return self.model(text, max_length=max_length, do_sample=False)
 
     async def process_texts(self, text: str):
         try:
