@@ -4,7 +4,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 class Processor(ABC):
     def __init__(self):
-        self.executor = ThreadPoolExecutor(max_workers=5)  # Adjust max_workers as needed
+        self.executor = ThreadPoolExecutor(max_workers=2)  # Adjust max_workers as needed
 
     @abstractmethod
     def process_texts(self, texts: List[str]) -> List[str]:

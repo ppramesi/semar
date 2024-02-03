@@ -1,6 +1,6 @@
 import asyncio
 from httpx import AsyncClient
-from typing import List
+from typing import List, Union
 from newsplease import NewsPlease
 
 class ArticleFetcher:
@@ -9,7 +9,7 @@ class ArticleFetcher:
         results = await asyncio.gather(*(self._fetch_and_process_url(url) for url in urls))
         return results
 
-    async def _fetch_and_process_url(self, url: str | None) -> str:
+    async def _fetch_and_process_url(self, url: Union[str, None]) -> str:
         if url is None:
             return None
         

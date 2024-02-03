@@ -13,11 +13,14 @@ export class HuggingFaceFetchSummarizer extends FetchSummarizer {
     for (let i = 0; i < texts.length; i += batchSize) {
       const batch = texts.slice(i, i + batchSize);
       const results = await Promise.all(
-        batch.map((text) => {
+        batch.map(async (text) => {
           if (text === null) {
             return null;
           }
-          return callerInstance.summarizeText(text);
+          console.log({ text });
+          const summarized = await callerInstance.summarizeText(text);
+          console.log({ summarized });
+          return summarized;
         }),
       );
       summarizedTexts.push(...results);

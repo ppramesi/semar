@@ -436,13 +436,17 @@ export abstract class SemarServer {
 
   private async injectSummaries(contextTweets: Tweet[]) {
     if (this.fetchSummarizer) {
-      const articles =
-        await this.fetchSummarizer.summarizeTweetArticles(contextTweets);
-      contextTweets.forEach((_tweet, idx) => {
-        if (!_.isEmpty(articles[idx]) && _.isString(articles[idx])) {
-          contextTweets[idx].article_summary = articles[idx] as string;
-        }
-      });
+      try {
+        const articles =
+          await this.fetchSummarizer.summarizeTweetArticles(contextTweets);
+        contextTweets.forEach((_tweet, idx) => {
+          if (!_.isEmpty(articles[idx]) && _.isString(articles[idx])) {
+            contextTweets[idx].article_summary = articles[idx] as string;
+          }
+        });
+      } catch (err) {
+        return;
+      }
     }
   }
 
