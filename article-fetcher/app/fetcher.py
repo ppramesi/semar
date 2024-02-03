@@ -13,19 +13,27 @@ class ArticleFetcher:
         if url is None:
             return None
         
-        # Asynchronous method to fetch a single URL and process it
         print("Fetching: " + url)
-        async with AsyncClient() as client:
-            response = await client.get(url)
-            actual_url = response.url
-        print("Fetched: " + str(actual_url))
+        try:
+            async with AsyncClient() as client:
+                response = await client.get(url)
+                actual_url = response.url
+                print("Fetched: " + str(actual_url))
+        except Exception as e:
+            print(f"Failed to fetch {url} due to: {str(e)}")
+            return None
+        
         # Run the synchronous NewsPlease.from_url in an executor
         loop = asyncio.get_event_loop()
         try:
             article = await loop.run_in_executor(None, NewsPlease.from_url, str(actual_url))
-            print("Results: " + str(article.maintext))
-            return article.maintext
+            if article is not None and hasattr(article, 'maintext'):
+                print("Results: " + str(article.maintext))
+                return article.maintext
+            else:
+                return None
         except Exception as e:
+            print(f"Failed to process {url} due to: {str(e)}")
             return None
 
     async def fetch_articles(self, urls: List[str]):

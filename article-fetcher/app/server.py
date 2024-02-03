@@ -1,12 +1,12 @@
 from fastapi import FastAPI, Request, HTTPException
 import os
-from typing import List
+from typing import List, Union
 from pydantic import BaseModel
 from fetcher import ArticleFetcher
 
 # Pydantic model for the request data
 class ArticleFetcherRequest(BaseModel):
-    urls: List[str]
+    urls: List[Union[str, None]]
 
 app = FastAPI()
 

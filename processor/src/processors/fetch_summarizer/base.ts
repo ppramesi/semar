@@ -4,9 +4,13 @@ import axios from "axios";
 
 export type StringOrNull = string | null;
 
-async function getFinalUrl(url: string): Promise<string> {
-  const response = await axios.get(url);
-  return response.request.res.responseUrl;
+async function getFinalUrl(url: string): Promise<StringOrNull> {
+  try {
+    const response = await axios.get(url);
+    return response.request.res.responseUrl;
+  } catch (_error) {
+    return null;
+  }
 }
 
 function extractUrls(text: string): string[] {
@@ -24,8 +28,9 @@ export abstract class FetchSummarizer {
         );
         const actualUrls = finalUrls.filter(
           (url) =>
-            !url.startsWith("https://twitter.com") ||
-            !url.startsWith("https://x.com"),
+            url && 
+            (!url.startsWith("https://twitter.com") ||
+            !url.startsWith("https://x.com")),
         );
         return actualUrls[0] ?? null;
       }),
