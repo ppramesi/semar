@@ -1,6 +1,6 @@
 {
   "name": "semar",
-  "version": "0.0.1",
+  "version": "0.1.1",
   "workspaces": [
     "frontend",
     "processor",
@@ -11,7 +11,7 @@
     "semantic-search"
   ],
   "scripts": {
-    "format:all": "yarn workspace processor run format && yarn workspace harvester run format && yarn workspace scheduler run format"
+    "format:all": "yarn workspace processor run format && yarn workspace harvester run format && yarn workspace scheduler run format && yarn workspace invoker run format"
   },
   "description": "news aggregator",
   "main": "index.js",

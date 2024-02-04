@@ -52,6 +52,7 @@ export class HttpServiceCaller extends BaseServiceCaller {
         this.buildConfig(),
       );
 
+      console.log(response.data);
       return response.data.result;
     } catch (error) {
       console.error("Error during the API call:", error);

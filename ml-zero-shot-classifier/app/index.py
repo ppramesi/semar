@@ -11,4 +11,5 @@ if __name__ == "__main__":
     hostname = parsed_url.hostname
     port = parsed_url.port
     print(hostname)
+    print("FuckfuckfuckFuckfuckfuck")
     uvicorn.run("server:app", host=hostname, port=int(os.getenv('ZERO_SHOT_CLASSIFIER_PORT')))

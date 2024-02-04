@@ -114,6 +114,8 @@ services:
       HARVESTER_SEARCH_ENDPOINT: http://harvester:${HARVESTER_PORT}/search-relevant-tweets/
       HARVESTER_SCRAPE_ENDPOINT: http://harvester:${HARVESTER_PORT}/scrape-tweets/
       ZERO_SHOT_CLASSIFIER_ENDPOINT: http://ml-zero-shot-classifier:${ZERO_SHOT_CLASSIFIER_PORT}/
+      SUMMARIZER_ENDPOINT: http://ml-summarizer:${SUMMARIZER_PORT}/
+      ARTICLE_FETCHER_ENDPOINT: http://article-fetcher:${ARTICLE_FETCHER_PORT}/
       RERANKER_ENDPOINT: http://ml-reranker:${RERANKER_PORT}/
       POSTGRES_HOST: db
       POSTGRES_USER: ${POSTGRES_USER}
@@ -127,6 +129,7 @@ services:
       RERANK_VECTOR_SEARCH_RESULTS: ${RERANK_VECTOR_SEARCH_RESULTS}
       ZERO_SHOT_CLASSIFY_TWEETS: ${ZERO_SHOT_CLASSIFY_TWEETS}
       CLASSIFIER_AGGREGATOR: ${CLASSIFIER_AGGREGATOR}
+      FETCH_AND_SUMMARIZE: ${FETCH_AND_SUMMARIZE}
 
   frontend:
     build:
@@ -196,7 +199,7 @@ services:
       - "${ARTICLE_FETCHER_PORT}:${ARTICLE_FETCHER_PORT}"
     profiles:
       - all
-      - ml
+      - services
       - notdb
     env_file: 
       - ./article-fetcher/.env

@@ -28,12 +28,14 @@ RUN chmod +x install.sh
 ARG ML_ENVIRONMENT=cpu
 RUN ./install.sh
 
+# Copy only preload.py (and any other files it depends on) before copying the entire application
+# Adjust the path if preload.py depends on other specific files
+ENV IN_DOCKER_CONTAINER true
+COPY preload.py ./
+RUN python3 preload.py
+
 # Now copy the rest of your application
 COPY . .
-
-# Preload the model
-# Make sure this step is after copying your application code if preload.py is part of it
-RUN python3 preload.py
 
 # Define environment variable
 ENV NAME World

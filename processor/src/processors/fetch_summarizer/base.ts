@@ -1,3 +1,4 @@
+import _ from "lodash";
 import callerInstance from "../../services/callers/http_caller.js";
 import { Tweet } from "../../types/tweet.js";
 import axios from "axios";
@@ -22,15 +23,18 @@ export abstract class FetchSummarizer {
   async fetchArticles(tweets: Tweet[]): Promise<StringOrNull[]> {
     const urls = await Promise.all(
       tweets.map(async (tweet) => {
+        if (!_.isEmpty(tweet.article_summary)) {
+          return tweet.article_summary!;
+        }
         const extractedUrls = extractUrls(tweet.text);
         const finalUrls = await Promise.all(
           extractedUrls.map((url) => getFinalUrl(url)),
         );
         const actualUrls = finalUrls.filter(
           (url) =>
-            url && 
+            url &&
             (!url.startsWith("https://twitter.com") ||
-            !url.startsWith("https://x.com")),
+              !url.startsWith("https://x.com")),
         );
         return actualUrls[0] ?? null;
       }),

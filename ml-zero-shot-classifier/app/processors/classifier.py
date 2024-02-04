@@ -21,8 +21,8 @@ class ZeroShotClassifier(Processor):
         for result in results:
             # Filter labels for each query based on the threshold
             labels_scores = [(label, score) for label, score in zip(result['labels'], result['scores']) if score >= self.threshold]
-            filtered_results.append(map(lambda x: x[0], labels_scores))
-            filtered_scores.append(map(lambda x: x[1], labels_scores))
+            filtered_results.append(list(map(lambda x: x[0], labels_scores)))
+            filtered_scores.append(list(map(lambda x: x[1], labels_scores)))
 
         return (filtered_results, filtered_scores)
 
@@ -31,8 +31,8 @@ class ZeroShotClassifier(Processor):
 
     async def process_texts(self, queries: List[str], classes: List[str]):
         try:
-            reranked = await self.classify(queries, classes)
-            return reranked
+            (filtered_results, filtered_scores) = await self.classify(queries, classes)
+            return (filtered_results, filtered_scores)
         except Exception as e:
             # Handle exceptions or propagate them
             raise e

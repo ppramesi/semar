@@ -50,6 +50,16 @@ export class ZeroShotClassifierAggregator extends ClassifierAggregator {
     originalTweets: Tweet[],
     extraOpts: { zeroShotResult: string[][] },
   ): Promise<Tweet[][]> {
+    console.log(
+      JSON.stringify(
+        {
+          originalTweets,
+          extraOpts,
+        },
+        null,
+        2,
+      ),
+    );
     return Object.values(
       extraOpts.zeroShotResult.reduce(
         (acc, tags, idx) => {
