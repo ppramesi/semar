@@ -35,7 +35,7 @@ COPY preload.py ./
 RUN python3 preload.py
 
 # Now copy the rest of your application
-COPY . .
+COPY app app/
 
 # Define environment variable
 ENV NAME World

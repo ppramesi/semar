@@ -1,5 +1,5 @@
 # Use an official Python runtime as a parent image
-FROM python:3.8
+FROM nvidia/cuda:11.4.0-base-ubuntu20.04
 
 # Set the working directory in the container
 WORKDIR /usr/src
@@ -35,7 +35,7 @@ COPY preload.py ./
 RUN python3 preload.py
 
 # Now copy the rest of your application
-COPY . .
+COPY app app/
 
 # Define environment variable
 ENV NAME World
