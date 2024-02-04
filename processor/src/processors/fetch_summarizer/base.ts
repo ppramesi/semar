@@ -24,7 +24,7 @@ export abstract class FetchSummarizer {
     const urls = await Promise.all(
       tweets.map(async (tweet) => {
         if (!_.isEmpty(tweet.article_summary)) {
-          return tweet.article_summary!;
+          return null;
         }
         const extractedUrls = extractUrls(tweet.text);
         const finalUrls = await Promise.all(

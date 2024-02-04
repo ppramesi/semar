@@ -108,6 +108,7 @@ export class SemarPostgres<
         { name: "date", type: "TIMESTAMP", returned: true },
         { name: "url", type: "TEXT", returned: true },
         { name: "tags", type: "TEXT", returned: true },
+        { name: "article_summary", type: "TEXT", returned: true }
       ],
     };
 
@@ -222,9 +223,13 @@ export class SemarPostgres<
       if (!_.isNil(tweet.tags)) {
         tags.tags = tweet.tags;
       }
+      const articleSummary: { article_summary?: string } = {};
+      if (!_.isNil(tweet.article_summary)) {
+        articleSummary.article_summary = tweet.article_summary;
+      }
 
       const addDocOpt = {
-        extraColumns: [{ url: tweet.url, date, ...tags }],
+        extraColumns: [{ url: tweet.url, date, ...tags, ...articleSummary }],
         ids: [tweet.id],
       };
 
@@ -256,10 +261,13 @@ export class SemarPostgres<
               pageContent: tweet.text,
             }),
           );
-          const pushParams: { url: string; date: string; tags?: string } = {
+          const pushParams: { url: string; date: string; tags?: string, article_summary?: string } = {
             url: tweet.url,
             date,
           };
+          if (!_.isNil(tweet.article_summary)) {
+            pushParams.article_summary = tweet.article_summary;
+          }
           if (!_.isNil(tweet.tags)) {
             pushParams.tags = JSON.stringify(tweet.tags);
           }

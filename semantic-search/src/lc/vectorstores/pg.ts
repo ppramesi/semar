@@ -114,7 +114,7 @@ class Fragment {
     joiner = " ",
     enclosed = false,
   ): Fragment {
-    const queryArray: string[] = [];
+    const queryArray = [];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let combinedValues: any[] = [];
     let placeholderOffset = 0;
@@ -644,7 +644,7 @@ export class PGVectorExt<
     }: { m?: number; efConstruction?: number; efSearch?: number },
   ): string {
     let efSearchStr = "";
-    const opts: string[] = [];
+    const opts = [];
     if (m) opts.push(`m = ${m}`);
     if (efConstruction) opts.push(`ef_construction = ${efConstruction}`);
     if (efSearch) {
@@ -897,14 +897,16 @@ export class PGVectorStore<
         options?.extraColumns?.slice(i, i + chunkSize) || [];
 
       const rows = chunkVectors.map((embedding, idx) => {
-        const extraColumns = Object.entries(
-          chunkExtraColumns[idx] ?? {},
-        ).reduce((acc, [key, value]) => {
-          // check if key is in this.extraColumns
-          const column = this.extraColumns.find(({ name }) => name === key);
-          if (column == null) return acc;
+        const extraColumns = this.extraColumns.reduce((acc, { name, returned }) => {
+          if(!returned) {
+            return acc;
+          }
+          if(!chunkExtraColumns[idx]?.[name]) {
+            acc[name] = null;
+            return acc;
+          }
 
-          acc[key] = value;
+          acc[name] = chunkExtraColumns[idx]![name]
           return acc;
         }, {} as ColumnValue);
 
@@ -979,12 +981,12 @@ export class PGVectorStore<
     ];
     let parameterCount = 5;
 
-    const extraColumns: string[] = [];
+    const extraColumns = [];
 
     for (let i = 0; i < this.extraColumns.length; i += 1) {
       const { name, type, notNull, references } = this.extraColumns[i];
       let refString = "";
-      const refParams: string[] = [];
+      const refParams = [];
       let adder = 2;
       if (references) {
         if (typeof references === "string") {
@@ -1037,8 +1039,8 @@ export class PGVectorStore<
       throw new Error(`Invalid join statement: ${op}`);
     }
 
-    const parametrizedOn: string[] = [];
-    const onParams: string[] = [];
+    const parametrizedOn = [];
+    const onParams = [];
     for (let k = 0; k < on.length; k += 2) {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       if (on[k].operator && !allowedOperators.includes(on[k].operator!)) {

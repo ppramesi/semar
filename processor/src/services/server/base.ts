@@ -365,8 +365,9 @@ export abstract class SemarServer {
                     return this.fetchRelevantTweetsFromSearch(tag);
                   }),
                 ),
-                this.saveTweets(tweets),
-                this.injectSummaries(tweets),
+                this.injectSummaries(tweets).then(() => {
+                  return this.saveTweets(tweets)
+                }),
               ]);
               const currentTags = (
                 tweets
@@ -434,14 +435,14 @@ export abstract class SemarServer {
     }
   }
 
-  private async injectSummaries(contextTweets: Tweet[]) {
+  private async injectSummaries(tweets: Tweet[]) {
     if (this.fetchSummarizer) {
       try {
         const articles =
-          await this.fetchSummarizer.summarizeTweetArticles(contextTweets);
-        contextTweets.forEach((_tweet, idx) => {
-          if (!_.isEmpty(articles[idx]) && _.isString(articles[idx])) {
-            contextTweets[idx].article_summary = articles[idx] as string;
+          await this.fetchSummarizer.summarizeTweetArticles(tweets);
+        tweets.forEach((tweet, idx) => {
+          if (!_.isEmpty(articles[idx]) && _.isString(articles[idx]) && _.isEmpty(tweet.article_summary)) {
+            tweets[idx].article_summary = articles[idx] as string;
           }
         });
       } catch (err) {

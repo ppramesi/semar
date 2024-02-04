@@ -897,14 +897,16 @@ export class PGVectorStore<
         options?.extraColumns?.slice(i, i + chunkSize) || [];
 
       const rows = chunkVectors.map((embedding, idx) => {
-        const extraColumns = Object.entries(
-          chunkExtraColumns[idx] ?? {},
-        ).reduce((acc, [key, value]) => {
-          // check if key is in this.extraColumns
-          const column = this.extraColumns.find(({ name }) => name === key);
-          if (column == null) return acc;
+        const extraColumns = this.extraColumns.reduce((acc, { name, returned }) => {
+          if(!returned) {
+            return acc;
+          }
+          if(!chunkExtraColumns[idx]?.[name]) {
+            acc[name] = null;
+            return acc;
+          }
 
-          acc[key] = value;
+          acc[name] = chunkExtraColumns[idx]![name]
           return acc;
         }, {} as ColumnValue);
 
