@@ -901,12 +901,13 @@ export class PGVectorStore<
           if(!returned) {
             return acc;
           }
-          if(!chunkExtraColumns[idx]?.[name]) {
-            acc[name] = null;
+          
+          if(chunkExtraColumns[idx]?.[name]) {
+            acc[name] = chunkExtraColumns[idx]![name]
             return acc;
           }
 
-          acc[name] = chunkExtraColumns[idx]![name]
+          acc[name] = null;
           return acc;
         }, {} as ColumnValue);
 
