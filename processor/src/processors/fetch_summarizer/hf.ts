@@ -2,7 +2,7 @@ import callerInstance from "../../services/callers/http_caller.js";
 import { Tweet } from "../../types/tweet.js";
 import { FetchSummarizer, StringOrNull } from "./base.js";
 
-export class HuggingFaceFetchSummarizer extends FetchSummarizer {
+export class TransformersFetchSummarizer extends FetchSummarizer {
   async summarizeTweetArticles(tweets: Tweet[]): Promise<StringOrNull[]> {
     const articles = await this.fetchArticles(tweets);
     return this.batchedSendRequest(articles);

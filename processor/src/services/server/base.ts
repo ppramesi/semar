@@ -15,7 +15,7 @@ import { TopicSplitter } from "../../lc/chains/topic_splitter.js";
 import { Tag } from "../../types/tag.js";
 import { hashToUUID } from "../../utils/hash.js";
 import { FetchSummarizer } from "../../processors/fetch_summarizer/base.js";
-import { HuggingFaceFetchSummarizer } from "../../processors/fetch_summarizer/hf.js";
+import { TransformersFetchSummarizer } from "../../processors/fetch_summarizer/hf.js";
 import { LLMFetchSummarizer } from "../../processors/fetch_summarizer/llm.js";
 
 export type SemarServerOpts = {
@@ -60,7 +60,7 @@ export abstract class SemarServer {
     });
 
     if (process.env.FETCH_AND_SUMMARIZE === "hf") {
-      this.fetchSummarizer = new HuggingFaceFetchSummarizer();
+      this.fetchSummarizer = new TransformersFetchSummarizer();
     } else if (process.env.FETCH_AND_SUMMARIZE === "llm") {
       this.fetchSummarizer = new LLMFetchSummarizer({
         llm: this.baseLlm,

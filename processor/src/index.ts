@@ -9,7 +9,7 @@ import { LangChainTracer } from "langchain/callbacks";
 import _ from "lodash";
 // import { TweetSummarizer } from "./lc/chains/summarizer.js";
 import { ClassifierAggregator } from "./processors/classifier_aggregator/base.js";
-import { ZeroShotClassifierAggregator } from "./processors/classifier_aggregator/zero_shot.js";
+import { ZeroShotClassifierAggregator } from "./processors/classifier_aggregator/hf.js";
 import { LLMClassifierAggregator } from "./processors/classifier_aggregator/llm.js";
 
 dotenv.config();
@@ -96,7 +96,7 @@ const db = new SemarPostgres({
 await db.ensureTablesInDatabase();
 
 let classifierAggregator: ClassifierAggregator;
-if (process.env.CLASSIFIER_AGGREGATOR === "zero-shot") {
+if (process.env.CLASSIFIER_AGGREGATOR === "hf") {
   classifierAggregator = new ZeroShotClassifierAggregator();
 } else if (process.env.CLASSIFIER_AGGREGATOR === "llm") {
   classifierAggregator = new LLMClassifierAggregator({
