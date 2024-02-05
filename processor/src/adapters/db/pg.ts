@@ -108,7 +108,7 @@ export class SemarPostgres<
         { name: "date", type: "TIMESTAMP", returned: true },
         { name: "url", type: "TEXT", returned: true },
         { name: "tags", type: "TEXT", returned: true },
-        { name: "article_summary", type: "TEXT", returned: true }
+        { name: "article_summary", type: "TEXT", returned: true },
       ],
     };
 
@@ -261,7 +261,12 @@ export class SemarPostgres<
               pageContent: tweet.text,
             }),
           );
-          const pushParams: { url: string; date: string; tags?: string, article_summary?: string } = {
+          const pushParams: {
+            url: string;
+            date: string;
+            tags?: string;
+            article_summary?: string;
+          } = {
             url: tweet.url,
             date,
           };

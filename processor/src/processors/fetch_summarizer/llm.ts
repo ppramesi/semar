@@ -4,16 +4,16 @@ import { Tweet } from "../../types/tweet.js";
 import { FetchSummarizer, StringOrNull } from "./base.js";
 import { BaseLanguageModel } from "langchain/base_language";
 
-export type LLMFaceFetchSummarizerOpts = {
+export type LLMFetchSummarizerOpts = {
   llm: BaseLanguageModel;
   callbacks?: Callbacks;
 };
 
-export class LLMFaceFetchSummarizer extends FetchSummarizer {
+export class LLMFetchSummarizer extends FetchSummarizer {
   summarizer: ArticleSummarizer;
   callbacks?: Callbacks;
 
-  constructor(opts: LLMFaceFetchSummarizerOpts) {
+  constructor(opts: LLMFetchSummarizerOpts) {
     super();
 
     this.summarizer = new ArticleSummarizer({

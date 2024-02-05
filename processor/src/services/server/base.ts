@@ -16,7 +16,7 @@ import { Tag } from "../../types/tag.js";
 import { hashToUUID } from "../../utils/hash.js";
 import { FetchSummarizer } from "../../processors/fetch_summarizer/base.js";
 import { HuggingFaceFetchSummarizer } from "../../processors/fetch_summarizer/hf.js";
-import { LLMFaceFetchSummarizer } from "../../processors/fetch_summarizer/llm.js";
+import { LLMFetchSummarizer } from "../../processors/fetch_summarizer/llm.js";
 
 export type SemarServerOpts = {
   db: SemarPostgres;
@@ -62,7 +62,7 @@ export abstract class SemarServer {
     if (process.env.FETCH_AND_SUMMARIZE === "hf") {
       this.fetchSummarizer = new HuggingFaceFetchSummarizer();
     } else if (process.env.FETCH_AND_SUMMARIZE === "llm") {
-      this.fetchSummarizer = new LLMFaceFetchSummarizer({
+      this.fetchSummarizer = new LLMFetchSummarizer({
         llm: this.baseLlm,
         callbacks: this.callbacks,
       });
@@ -157,14 +157,18 @@ export abstract class SemarServer {
   }
 
   async fetchRelevantTweetsFromSearch(keywords: string[]): Promise<Tweet[]> {
-    const sevenDaysAgo = new Date(
-      new Date().getTime() - 14 * 24 * 60 * 60 * 1000,
-    );
-    return this.serviceCaller.searchRelevantTweets(
-      `("${keywords.join(`" AND "`)}") min_faves:10`,
-      sevenDaysAgo,
-      new Date(),
-    );
+    try {
+      const sevenDaysAgo = new Date(
+        new Date().getTime() - 14 * 24 * 60 * 60 * 1000,
+      );
+      return this.serviceCaller.searchRelevantTweets(
+        `("${keywords.join(`" AND "`)}") min_faves:10`,
+        sevenDaysAgo,
+        new Date(),
+      );
+    } catch (_error) {
+      return [];
+    }
   }
 
   async fetchRelevantTweetsFromVectorStore(
@@ -179,38 +183,42 @@ export abstract class SemarServer {
     tweetOrId: Tweet | string,
     k: number,
   ): Promise<Tweet[]> {
-    let tweet: Tweet;
-    if (typeof tweetOrId === "string") {
-      tweet = await this.db.fetchTweet(tweetOrId);
-    } else {
-      tweet = tweetOrId;
-    }
+    try {
+      let tweet: Tweet;
+      if (typeof tweetOrId === "string") {
+        tweet = await this.db.fetchTweet(tweetOrId);
+      } else {
+        tweet = tweetOrId;
+      }
 
-    let embeddings: number[];
-    if (!_.isNil(tweet.embedding)) {
-      embeddings = tweet.embedding;
-    } else {
-      embeddings = await this.db.tweetVectorstore.embeddings.embedQuery(
+      let embeddings: number[];
+      if (!_.isNil(tweet.embedding)) {
+        embeddings = tweet.embedding;
+      } else {
+        embeddings = await this.db.tweetVectorstore.embeddings.embedQuery(
+          tweet.text,
+        );
+      }
+      const searchResults =
+        await this.db.tweetVectorstore.similaritySearchVectorWithScore(
+          embeddings,
+          k,
+          this.buildPGFilter(tweet),
+        );
+      if (searchResults.length === 0) {
+        return [];
+      }
+      const docs = searchResults.map((res) => res[0]);
+      const rerankIndices = await this.serviceCaller.crossEncoderRerank(
         tweet.text,
+        docs.map((d) => d.pageContent),
       );
-    }
-    const searchResults =
-      await this.db.tweetVectorstore.similaritySearchVectorWithScore(
-        embeddings,
-        k,
-        this.buildPGFilter(tweet),
-      );
-    if (searchResults.length === 0) {
+      return SemarPostgres.fromSearchResultsToTweets(
+        rerankIndices.map((idx) => docs[idx]),
+      ).slice(0, 5);
+    } catch (_error) {
       return [];
     }
-    const docs = searchResults.map((res) => res[0]);
-    const rerankIndices = await this.serviceCaller.crossEncoderRerank(
-      tweet.text,
-      docs.map((d) => d.pageContent),
-    );
-    return SemarPostgres.fromSearchResultsToTweets(
-      rerankIndices.map((idx) => docs[idx]),
-    ).slice(0, 5);
   }
 
   async summarizeTweets(
@@ -366,7 +374,7 @@ export abstract class SemarServer {
                   }),
                 ),
                 this.injectSummaries(tweets).then(() => {
-                  return this.saveTweets(tweets)
+                  return this.saveTweets(tweets);
                 }),
               ]);
               const currentTags = (
@@ -441,7 +449,11 @@ export abstract class SemarServer {
         const articles =
           await this.fetchSummarizer.summarizeTweetArticles(tweets);
         tweets.forEach((tweet, idx) => {
-          if (!_.isEmpty(articles[idx]) && _.isString(articles[idx]) && _.isEmpty(tweet.article_summary)) {
+          if (
+            !_.isEmpty(articles[idx]) &&
+            _.isString(articles[idx]) &&
+            _.isEmpty(tweet.article_summary)
+          ) {
             tweets[idx].article_summary = articles[idx] as string;
           }
         });

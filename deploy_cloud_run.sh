@@ -92,7 +92,7 @@ fi
 
 dockerfile_path="$service_dir"
 # Handle special case for ml-reranker and ml-zero-shot-classifier
-if [[ "$service" == "ml-reranker" ]] || [[ "$service" == "ml-zero-shot-classifier" ] || [[ "$service" == "ml-summarizer" ]]; then
+if [[ "$service" == "ml-reranker" ]] || [[ "$service" == "ml-zero-shot-classifier" ]] || [[ "$service" == "ml-summarizer" ]]; then
     if [ -z "$ML_ENVIRONMENT" ]; then
         echo "Error: ML_ENVIRONMENT is not set. It must be either 'cpu' or 'gpu'."
         exit 1

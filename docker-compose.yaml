@@ -70,6 +70,7 @@ services:
       - "${SEMANTIC_SEARCH_PORT}:${SEMANTIC_SEARCH_PORT}"
     depends_on:
       - db
+      - ml-reranker
     profiles:
       - all
       - services
@@ -104,6 +105,11 @@ services:
       - "${PROCESSOR_PORT}:${PROCESSOR_PORT}"
     depends_on:
       - db
+      - ml-zero-shot-classifier
+      - ml-summarizer
+      - ml-reranker
+      - article-fetcher
+      - harvester
     profiles:
       - all
       - services
@@ -144,6 +150,7 @@ services:
       - "${NITRO_PORT}:${NITRO_PORT}"
     depends_on:
       - db
+      - semantic-search
     profiles:
       - all
       - services

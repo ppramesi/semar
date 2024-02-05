@@ -897,18 +897,22 @@ export class PGVectorStore<
         options?.extraColumns?.slice(i, i + chunkSize) || [];
 
       const rows = chunkVectors.map((embedding, idx) => {
-        const extraColumns = this.extraColumns.reduce((acc, { name, returned }) => {
-          if(!returned) {
-            return acc;
-          }
-          if(!chunkExtraColumns[idx]?.[name]) {
+        const extraColumns = this.extraColumns.reduce(
+          (acc, { name, returned }) => {
+            if (!returned) {
+              return acc;
+            }
+
+            if (chunkExtraColumns[idx]?.[name]) {
+              acc[name] = chunkExtraColumns[idx]![name];
+              return acc;
+            }
+
             acc[name] = null;
             return acc;
-          }
-
-          acc[name] = chunkExtraColumns[idx]![name]
-          return acc;
-        }, {} as ColumnValue);
+          },
+          {} as ColumnValue,
+        );
 
         const embeddingString =
           this.pgExtension.buildInsertVectorStatement(embedding);
