@@ -1,6 +1,6 @@
 swagger: '2.0'
 info:
-  title: ${GCP_PROJECT_ID}-api-gateway
+  title: semar-api-gateway
   description: Semar gateway API
   version: 1.0.0
 schemes:
