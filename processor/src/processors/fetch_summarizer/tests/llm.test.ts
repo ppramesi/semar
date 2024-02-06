@@ -1,8 +1,8 @@
 import { v4 } from "uuid";
+import dotenv from "dotenv";
+import { ChatOpenAI } from "langchain/chat_models/openai";
 import { Tweet } from "../../../types/tweet";
 import { LLMFetchSummarizer } from "../llm";
-import { ChatOpenAI } from "langchain/chat_models/openai";
-import dotenv from "dotenv";
 
 dotenv.config();
 

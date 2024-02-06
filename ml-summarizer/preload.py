@@ -5,7 +5,7 @@ import shutil
 if not os.path.exists("./model"):
     os.makedirs("./model")
 
-model = pipeline("summarization", model="google/pegasus-xsum")
+model = pipeline("summarization", model="marianna13/flan-t5-base-summarization")
 model.save_pretrained("./model")
 
 # Get the default cache directory path

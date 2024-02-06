@@ -1,7 +1,9 @@
 import { v4 } from "uuid";
-import { Tweet } from "../../../types/tweet";
-import { HuggingFaceFetchSummarizer } from "../hf";
 import dotenv from "dotenv";
+import { Tweet } from "../../../types/tweet";
+import { TransformersFetchSummarizer } from "../hf";
+// import axios from "axios";
+import _ from "lodash";
 
 dotenv.config();
 
@@ -44,10 +46,10 @@ const tweets: Tweet[] = [
   },
 ];
 
-let fetchSummarizer: HuggingFaceFetchSummarizer;
+let fetchSummarizer: TransformersFetchSummarizer;
 
 beforeEach(() => {
-  fetchSummarizer = new HuggingFaceFetchSummarizer();
+  fetchSummarizer = new TransformersFetchSummarizer();
 });
 
 test(
@@ -59,3 +61,21 @@ test(
   },
   1000 * 60 * 5,
 );
+
+test("Fetch Summarizer Online Test", async () => {
+  const articles = await fetchSummarizer.fetchArticles(tweets);
+  const summ = await Promise.allSettled(articles.map((article) => {
+    if(!_.isEmpty(article)){
+      return axios.post(process.env.SUMMARIZER_ENDPOINT!, {
+        text: article,
+      },
+      {
+        headers: {
+          "auth-token": process.env.AUTH_TOKEN!
+        }
+      })
+    }
+    return null;
+  }))
+  console.log(summ);
+}, 1000 * 60 * 5)
