@@ -2,7 +2,7 @@ import { v4 } from "uuid";
 import dotenv from "dotenv";
 import { Tweet } from "../../../types/tweet";
 import { TransformersFetchSummarizer } from "../hf";
-// import axios from "axios";
+import axios from "axios";
 import _ from "lodash";
 
 dotenv.config();
