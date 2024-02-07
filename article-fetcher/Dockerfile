@@ -1,8 +1,10 @@
 # Use the official Python base image
-FROM python:3.8
+FROM python:3.8-alpine
 
 # Set the working directory in the container
 WORKDIR /usr/src
+
+RUN apk update && apk add --no-cache gcc python3-dev libc-dev libffi-dev
 
 # Copy the dependencies file to the working directory
 COPY requirements.txt .

@@ -91,6 +91,13 @@ if [ "$mode" != "development" ] && [ "$mode" != "staging" ] && [ "$mode" != "pro
 fi
 
 dockerfile_path="$service_dir"
+memory="512M"
+cpu=1
+if [[ "$service" == "harvester" ]]; then
+    memory="1G"
+fi
+max_instances=3
+concurrency=80
 # Handle special case for ml-reranker and ml-zero-shot-classifier
 if [[ "$service" == "ml-reranker" ]] || [[ "$service" == "ml-zero-shot-classifier" ]] || [[ "$service" == "ml-summarizer" ]]; then
     if [ -z "$ML_ENVIRONMENT" ]; then
@@ -98,6 +105,10 @@ if [[ "$service" == "ml-reranker" ]] || [[ "$service" == "ml-zero-shot-classifie
         exit 1
     fi
     dockerfile_path="$service_dir/docker/$ML_ENVIRONMENT"
+    memory="4G"
+    cpu=2
+    max_instances=10
+    concurrency=4
 fi
 
 declare -A services=(
@@ -119,17 +130,17 @@ if [[ $version =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
     secret_env_vars=$(awk -F '=' 'NF==2 && $2!="" { if (secret_vars != "") secret_vars = secret_vars ","; secret_vars = secret_vars $1 "=" $1 ":" $2 } END {print secret_vars}' $secrets_env_file)
 
     gcloud run deploy \
-        --memory 4G \
-        --cpu 2 \
+        --memory $memory \
+        --cpu $cpu \
         --timeout 3600 \
         --execution-environment gen2 \
-        --max-instances 3 \
+        --max-instances $max_instances \
+        --concurrency $concurrency \
         --image asia.gcr.io/${GCP_PROJECT_ID}/${service}:${version} \
         --update-env-vars "^@@^$env_vars" \
         --update-secrets "$secret_env_vars" \
         --service-account "${SERVICE_ACCOUNT}" \
         --port 8080 \
-        --concurrency 80 \
         --allow-unauthenticated \
         --region asia-southeast2 \
         --project "${GCP_PROJECT_ID}"
