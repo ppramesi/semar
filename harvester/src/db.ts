@@ -1,5 +1,5 @@
 import pgPromise, { IDatabase } from "pg-promise";
-import { deferrer, DeferredPromise } from "./utils/deferrer";
+import { deferrer, DeferredPromise } from "./utils/deferrer.js";
 
 export type ScrapeAccount = {
   id: string;

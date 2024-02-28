@@ -1,6 +1,6 @@
 import { test } from "@jest/globals";
 import { config } from "dotenv";
-import { CrawlManager } from "../manager";
+import { CrawlManager } from "../manager.js";
 
 config();
 

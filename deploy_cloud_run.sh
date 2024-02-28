@@ -85,6 +85,12 @@ if [ -z "$GCP_PROJECT_ID" ]; then
     exit 1
 fi
 
+# Check for essential environment variables
+if [ -z "$SERVICE_ACCOUNT" ]; then
+    echo "Error: SERVICE_ACCOUNT environment variable is missing."
+    exit 1
+fi
+
 if [ "$mode" != "development" ] && [ "$mode" != "staging" ] && [ "$mode" != "production" ]; then
     echo "Error: Invalid mode. Allowed values: development, staging, production"
     exit 1

@@ -4,7 +4,7 @@ import {
   SimpleIntervalSchedule,
   AsyncTask,
 } from "toad-scheduler";
-import { CrawlManager } from "./manager";
+import { CrawlManager } from "./manager.js";
 import { v4 } from "uuid";
 
 export type SchedulerConfig = {

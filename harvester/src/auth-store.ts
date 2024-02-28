@@ -1,5 +1,5 @@
-import { deferrer, DeferredPromise } from "./utils/deferrer";
-import dbInstance, { Database } from "./db";
+import { deferrer, DeferredPromise } from "./utils/deferrer.js";
+import dbInstance, { Database } from "./db.js";
 
 type AuthStoreSource = "db" | "env";
 type AuthSource = {

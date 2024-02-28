@@ -1,4 +1,4 @@
-import { ENABLE_EXPONENTIAL_BACKOFF } from "../utils/env";
+import { ENABLE_EXPONENTIAL_BACKOFF } from "../utils/env.js";
 
 // base timeout is 1 minute.
 const baseTimeout = 60_000;

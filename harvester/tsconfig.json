@@ -1,11 +1,12 @@
 {
   "compilerOptions": {
-    "target": "ES5",
-    "module": "CommonJS",
+    "target": "ESNext",
+    "module": "NodeNext",
     "outDir": "./dist",
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    "moduleResolution": "NodeNext"
   },
   "lib": ["esnext", "dom"],
   "include": ["src/**/*", "**/*.d.ts"],

@@ -1,11 +1,11 @@
-import { crawlReturned } from "./crawl";
+import { crawlReturned } from "./crawl.js";
 import axios, { AxiosRequestConfig } from "axios";
-import dbInstance, { Database } from "./db";
-import authStoreInstance, { AuthStore } from "./auth-store";
-import { TweetMappedReturn } from "./types/tweets.types";
+import dbInstance, { Database } from "./db.js";
+import authStoreInstance, { AuthStore } from "./auth-store.js";
+import { TweetMappedReturn } from "./types/tweets.types.js";
 import _ from "lodash";
-import { hashToUUID } from "./utils/hash";
-import { getServicesUrl } from "./utils/env";
+import { hashToUUID } from "./utils/hash.js";
+import { getServicesUrl } from "./utils/env.js";
 
 export type TweetCrawlerOutput = {
   id: string;

@@ -1,19 +1,57 @@
 import * as fs from "fs";
 import dayjs from "dayjs";
-import { pick } from "lodash";
+import _ from "lodash";
 import chalk from "chalk";
 import path from "path";
-import { Entry, TweetMappedReturn } from "./types/tweets.types";
+import { Entry, TweetMappedReturn } from "./types/tweets.types.js";
 import { chromium } from "playwright-extra";
 import stealth from "puppeteer-extra-plugin-stealth";
-import { inputKeywords } from "./features/input-keywords";
-import { listenNetworkRequests } from "./features/listen-network-requests";
-import { calculateForRateLimit } from "./features/exponential-backoff";
-import { HEADLESS_MODE } from "./utils/env";
-import { TWITTER_SEARCH_ADVANCED_URL } from "./constants";
-import { LaunchOptions } from "@playwright/test";
+import { inputKeywords } from "./features/input-keywords.js";
+import { listenNetworkRequests } from "./features/listen-network-requests.js";
+import { calculateForRateLimit } from "./features/exponential-backoff.js";
+import { HEADLESS_MODE } from "./utils/env.js";
+import { TWITTER_SEARCH_ADVANCED_URL } from "./constants.js";
+import {
+  Browser,
+  BrowserContextOptions,
+  LaunchOptions,
+} from "@playwright/test";
 
 chromium.use(stealth());
+
+const browsers: {
+  [hash: string]: Browser;
+} = {};
+
+function hashStr(str: string) {
+  let hash = 0;
+  for (let i = 0, len = str.length; i < len; i++) {
+    let chr = str.charCodeAt(i);
+    hash = (hash << 5) - hash + chr;
+    hash |= 0; // Convert to 32bit integer
+  }
+  return hash;
+}
+
+async function getBrowser(
+  launchOpts: LaunchOptions,
+  browserContext?: BrowserContextOptions,
+) {
+  const { logger: _logger, ...launchOptsSansLogger } = launchOpts;
+  const hashedOptions = hashStr(JSON.stringify(launchOptsSansLogger));
+  if (!_.isNil(browsers[hashedOptions])) {
+    const context = await browsers[hashedOptions].newContext(browserContext);
+    return {
+      browser: browsers[hashedOptions],
+      context,
+    };
+  }
+
+  const browser = await chromium.launch(launchOpts);
+  const context = await browser.newContext(browserContext);
+
+  return { browser, context };
+}
 
 const NOW = dayjs().format("DD-MM-YYYY HH-mm-ss");
 let headerWritten = false;
@@ -123,8 +161,6 @@ export async function crawl({
 
   let MODIFIED_SEARCH_KEYWORDS = SEARCH_KEYWORDS;
 
-  const CURRENT_PACKAGE_VERSION = require("../package.json").version;
-
   // change spaces to _
   const FOLDER_DESTINATION = "./tweets-data";
   const FUlL_PATH_FOLDER_DESTINATION = path.resolve(FOLDER_DESTINATION);
@@ -160,9 +196,7 @@ export async function crawl({
     launchOpts.proxy = proxyOpts as ProxyOpts;
   }
 
-  const browser = await chromium.launch(launchOpts);
-
-  const context = await browser.newContext({
+  const { browser, context } = await getBrowser(launchOpts, {
     screen: { width: 1240, height: 1080 },
     storageState: {
       cookies: [
@@ -363,7 +397,7 @@ export async function crawl({
 
           const rows = comingTweets.reduce(
             (prev: [], current: (typeof tweetContents)[0]) => {
-              const tweet = pick(current.tweet, filteredFields);
+              const tweet = _.pick(current.tweet, filteredFields);
 
               let cleanTweetText = `${tweet.full_text
                 .replace(/,/g, " ")
@@ -486,9 +520,6 @@ export async function crawl({
   } catch (error) {
     console.error(error);
     console.info(chalk.blue(`Keywords: ${MODIFIED_SEARCH_KEYWORDS}`));
-    console.info(
-      chalk.yellowBright("Twitter Harvest v", CURRENT_PACKAGE_VERSION),
-    );
 
     const errorFilename =
       FUlL_PATH_FOLDER_DESTINATION +
@@ -504,9 +535,7 @@ export async function crawl({
       );
     });
   } finally {
-    if (!DEBUG_MODE) {
-      await browser.close();
-    }
+    await context.close();
   }
 }
 
@@ -543,8 +572,6 @@ export async function crawlReturned({
 
   let MODIFIED_SEARCH_KEYWORDS = SEARCH_KEYWORDS;
 
-  const CURRENT_PACKAGE_VERSION = require("../package.json").version;
-
   console.info(chalk.blue("\nOpening twitter search page...\n"));
 
   let TWEETS_NOT_FOUND_ON_CURRENT_TAB = false;
@@ -557,9 +584,7 @@ export async function crawlReturned({
     launchOpts.proxy = proxyOpts as ProxyOpts;
   }
 
-  const browser = await chromium.launch(launchOpts);
-
-  const context = await browser.newContext({
+  const { browser, context } = await getBrowser(launchOpts, {
     screen: { width: 1240, height: 1080 },
     storageState: {
       cookies: [
@@ -827,12 +852,7 @@ export async function crawlReturned({
   } catch (error) {
     console.error(error);
     console.info(chalk.blue(`Keywords: ${MODIFIED_SEARCH_KEYWORDS}`));
-    console.info(
-      chalk.yellowBright("Twitter Harvest v", CURRENT_PACKAGE_VERSION),
-    );
   } finally {
-    if (!DEBUG_MODE) {
-      await browser.close();
-    }
+    await context.close();
   }
 }

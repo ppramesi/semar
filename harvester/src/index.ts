@@ -1,9 +1,9 @@
 import { config } from "dotenv";
 // import { Scheduler, createRecurrenceRule } from "./scheduler";
-import dbInstance from "./db";
-import { CrawlManager } from "./manager";
+import dbInstance from "./db.js";
+import { CrawlManager } from "./manager.js";
 import _ from "lodash";
-import { Server } from "./server";
+import { Server } from "./server.js";
 
 config();
 
